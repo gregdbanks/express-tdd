@@ -2,7 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 
+const { connectDb } = require("./config/db");
+
 dotenv.config({ path: "./config/config.env" });
+const errorHandler = require("./middleware/error");
+connectDb();
 
 const app = express();
 
@@ -16,12 +20,7 @@ app.use((req, res, next) => {
     next(error);
 });
 
-app.use((error, req, res, next) => {
-    const statusCode = error.statusCode || 500;
-    res.status(statusCode).json({
-        error: error.message || 'Internal Server Error',
-    });
-});
+app.use(errorHandler);
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`Server running on PORT: ${port}`));
