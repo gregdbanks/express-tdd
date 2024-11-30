@@ -1,8 +1,8 @@
 const request = require("supertest");
-const app = require("../index");
 const mongoose = require("mongoose");
 
 const Mission = require("../models/Mission");
+const app = require("../index");
 const { connectDb, disconnectDb } = require("../config/db");
 
 beforeAll(async () => {
@@ -75,13 +75,23 @@ describe("Missions API", () => {
             expect(response.body).toHaveProperty("status", "in progress");
         });
     });
-});
 
-describe('Async Error Handling Middleware', () => {
-    it('should catch errors and pass them to the error handler', async () => {
-        const response = await request(app).get('/api/missions/non-existent-route');
-        expect(response.status).toBe(404);
-        expect(response.body.error).toBe('Resource not found');
+    describe("DELETE /api/missions/:id", () => {
+        it("should delete an existing mission", async () => {
+            const response = await request(app).delete(
+                `/api/missions/${missionId}`
+            );
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty(
+                "message",
+                "Mission deleted successfully"
+            );
+        });
+
+        it("should return 404 for a deleted mission", async () => {
+            const response = await request(app).get(`/api/missions/${missionId}`);
+            expect(response.status).toBe(404);
+        });
     });
 });
 

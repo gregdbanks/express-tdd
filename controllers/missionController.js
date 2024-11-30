@@ -36,4 +36,19 @@ const updateMission = asyncHandler(async (req, res) => {
     res.status(200).json(mission);
 });
 
-module.exports = { createMission, getMissions, getMission, updateMission };
+const deleteMission = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const mission = await Mission.findByIdAndDelete(id);
+    if (!mission) {
+        return res.status(404).json({ error: "Mission not found" });
+    }
+    res.status(200).json({ message: "Mission deleted successfully" });
+});
+
+module.exports = {
+    createMission,
+    getMissions,
+    getMission,
+    updateMission,
+    deleteMission
+};

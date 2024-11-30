@@ -10,6 +10,7 @@ router
 router
     .route("/missions/:id")
     .get(missionController.getMission)
-    .put(missionController.updateMission);
+    .put(missionController.updateMission)
+    .delete(missionController.deleteMission);
 
 module.exports = router;
