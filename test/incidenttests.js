@@ -54,5 +54,22 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("title", "Locate Luke Skywalker");
             });
         });
+
+        describe("PUT /api/incidents/:id", () => {
+            it("should update an existing incident", async () => {
+                const updatedIncident = {
+                    title: "Free Han Solo",
+                    description: "Free Han Solo from his carbonite prison.",
+                    status: "resolved",
+                };
+
+                const response = await request(app)
+                    .put(`/api/incidents/${incidentId}`)
+                    .send(updatedIncident);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("title", "Free Han Solo");
+                expect(response.body).toHaveProperty("status", "resolved");
+            });
+        });
     });
 };

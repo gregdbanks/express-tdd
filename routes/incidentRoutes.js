@@ -9,6 +9,7 @@ router
 
 router
     .route("/incidents/:id")
-    .get(incidentController.getIncident);
+    .get(incidentController.getIncident)
+    .put(incidentController.updateIncident);
 
 module.exports = router;

@@ -22,8 +22,23 @@ const getIncident = asyncHandler(async (req, res) => {
     res.status(200).json(incident);
 });
 
+const updateIncident = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { title, description, status } = req.body;
+    const incident = await Incident.findByIdAndUpdate(
+        id,
+        { title, description, status },
+        { new: true, runValidators: true }
+    );
+    if (!incident) {
+        return res.status(404).json({ error: "Incident not found" });
+    }
+    res.status(200).json(incident);
+});
+
 module.exports = {
     createIncident,
     getIncidents,
-    getIncident
+    getIncident,
+    updateIncident
 };
