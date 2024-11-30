@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "7d713995b721c3bb38c1f5d2",
+    "title": "Stormtrooper Encounter Report",
+    "content": "Detailed report on the encounter with stormtroopers.",
+    "status": "closed",
+    "reportedAt": "2023-07-20T13:00:00Z",
+    "incident": "6d713995b721c3bb38c1f5d1",
+    "user": "674760631d5aba7490e31ff2"
+  },
+  {
+    "_id": "7d713a66ec8f2b88b8f830b2",
+    "title": "TIE Fighter Attack Report",
+    "content": "Detailed report on the TIE fighter attack.",
+    "status": "closed",
+    "reportedAt": "2023-07-21T13:00:00Z",
+    "incident": "6d713a66ec8f2b88b8f830b1",
+    "user": "674760631d5aba7490e31ff2"
+  },
+  {
+    "_id": "7d725a037b292f5f8ceff789",
+    "title": "Spy Transmission Report",
+    "content": "Detailed report on the intercepted spy transmission.",
+    "status": "open",
+    "reportedAt": "2023-07-22T13:00:00Z",
+    "incident": "6d725a037b292f5f8ceff788",
+    "user": "674760631d5aba7490e31ff2"
+  },
+  {
+    "_id": "7d725a1b7b292f5f8ceff78a",
+    "title": "Rebel Starfighter Attack Report",
+    "content": "Detailed report on the Rebel starfighter attack.",
+    "status": "open",
+    "reportedAt": "2023-07-23T13:00:00Z",
+    "incident": "6d725a1b7b292f5f8ceff789",
+    "user": "674760631d5aba7490e31ff2"
+  }
+]

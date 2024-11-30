@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "5d713995b721c3bb38c1f5d0",
+    "name": "Rescue Princess Leia",
+    "description": "Rescue Princess Leia from the Death Star.",
+    "status": "pending",
+    "commander": "Luke Skywalker",
+    "slug": "rescue-princess-leia",
+    "createdAt": "2024-05-15T10:20:30.000Z"
+  },
+  {
+    "_id": "5d713a66ec8f2b88b8f830b9",
+    "name": "Destroy the Death Star Again",
+    "description": "Destroy the Death Star using the Rebel fleet.",
+    "status": "in progress",
+    "commander": "Luke Skywalker",
+    "slug": "destroy-the-death-star",
+    "createdAt": "2024-03-22T14:30:40.000Z"
+  },
+  {
+    "_id": "5d725a037b292f5f8ceff787",
+    "name": "Capture the Rebel Spies",
+    "description": "Capture the Rebel spies who stole the Death Star plans.",
+    "status": "completed",
+    "commander": "Darth Vader",
+    "slug": "capture-the-rebel-spies",
+    "createdAt": "2024-02-10T08:45:50.000Z"
+  },
+  {
+    "_id": "5d725a1b7b292f5f8ceff788",
+    "name": "Defend the Death Star",
+    "description": "Defend the Death Star from the Rebel attack.",
+    "status": "in progress",
+    "commander": "Grand Moff Tarkin",
+    "slug": "defend-the-death-star",
+    "createdAt": "2024-04-05T11:00:00.000Z"
+  }
+]

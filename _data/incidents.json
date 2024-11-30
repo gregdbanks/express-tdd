@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "6d713995b721c3bb38c1f5d1",
+    "title": "Encounter with Stormtroopers",
+    "description": "The team encountered a squad of stormtroopers while infiltrating the Death Star.",
+    "status": "resolved",
+    "reportedAt": "2023-07-20T12:00:00Z",
+    "mission": "5d713995b721c3bb38c1f5d0",
+    "user": "674760631d5aba7490e31ff2"
+  },
+  {
+    "_id": "6d713a66ec8f2b88b8f830b1",
+    "title": "TIE Fighter Attack",
+    "description": "Rebel fleet was attacked by TIE fighters while approaching the Death Star.",
+    "status": "resolved",
+    "reportedAt": "2023-07-21T12:00:00Z",
+    "mission": "5d713a66ec8f2b88b8f830b9",
+    "user": "674760631d5aba7490e31ff2"
+  },
+  {
+    "_id": "6d725a037b292f5f8ceff788",
+    "title": "Spy Transmission Intercepted",
+    "description": "Imperial forces intercepted a transmission from Rebel spies.",
+    "status": "unresolved",
+    "reportedAt": "2023-07-22T12:00:00Z",
+    "mission": "5d725a037b292f5f8ceff787",
+    "user": "674760631d5aba7490e31ff2"
+  },
+  {
+    "_id": "6d725a1b7b292f5f8ceff789",
+    "title": "Rebel Starfighter Attack",
+    "description": "Rebel starfighters launched an attack on the Death Star.",
+    "status": "pending",
+    "reportedAt": "2023-07-23T12:00:00Z",
+    "mission": "5d725a1b7b292f5f8ceff788",
+    "user": "674760631d5aba7490e31ff2"
+  }
+]
