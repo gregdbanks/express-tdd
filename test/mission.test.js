@@ -74,6 +74,22 @@ describe("Missions API", () => {
             expect(response.status).toBe(400);
             expect(response.body.error).toBe('Duplicate field value entered');
         });
+
+        it('should handle ValidationError', async () => {
+            const partialMission = {
+                name: '',
+                description: 'A mission to test duplicate key error',
+                status: 'pending',
+                commander: 'Test Commander'
+            };
+
+            const response = await request(app)
+                .post('/api/missions')
+                .send(partialMission);
+
+            expect(response.status).toBe(400);
+            expect(response.body.error).toContain('Path `name` is required.');
+        });
     });
 });
 
