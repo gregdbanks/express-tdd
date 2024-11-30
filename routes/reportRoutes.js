@@ -7,4 +7,8 @@ router
     .post(reportController.createReport)
     .get(reportController.getReports);
 
+router
+    .route("/missions/:missionId/incidents/:incidentId/reports/:reportId")
+    .get(reportController.getReport);
+
 module.exports = router;

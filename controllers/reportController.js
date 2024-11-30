@@ -13,7 +13,16 @@ const getReports = asyncHandler(async (req, res) => {
     res.status(200).json(reports);
 });
 
+const getReport = asyncHandler(async (req, res) => {
+    const report = await Report.findById(req.params.reportId);
+    if (!report) {
+        return res.status(404).json({ error: "Report not found" });
+    }
+    res.status(200).json(report);
+});
+
 module.exports = {
     createReport,
     getReports,
+    getReport,
 };

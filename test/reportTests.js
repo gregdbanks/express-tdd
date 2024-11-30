@@ -62,5 +62,15 @@ module.exports = function () {
                 expect(Array.isArray(response.body)).toBe(true);
             });
         });
+
+        describe("GET /api/missions/:missionId/incidents/:incidentId/reports/:reportId", () => {
+            it("should get a single report for an incident", async () => {
+                const response = await request(app).get(
+                    `/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}`
+                );
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("title", "Found Luke");
+            });
+        });
     });
 };
