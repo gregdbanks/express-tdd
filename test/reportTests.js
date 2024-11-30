@@ -52,5 +52,15 @@ module.exports = function () {
                 reportId = response.body._id;
             });
         });
+
+        describe("GET /api/missions/:missionId/incidents/:incidentId/reports", () => {
+            it("should get all reports for an incident", async () => {
+                const response = await request(app).get(
+                    `/api/missions/${missionId}/incidents/${incidentId}/reports`
+                );
+                expect(response.status).toBe(200);
+                expect(Array.isArray(response.body)).toBe(true);
+            });
+        });
     });
 };

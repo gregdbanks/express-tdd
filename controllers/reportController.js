@@ -8,6 +8,12 @@ const createReport = asyncHandler(async (req, res) => {
     res.status(201).json(report);
 });
 
+const getReports = asyncHandler(async (req, res) => {
+    const reports = await Report.find({ incident: req.params.incidentId });
+    res.status(200).json(reports);
+});
+
 module.exports = {
-    createReport
+    createReport,
+    getReports,
 };
