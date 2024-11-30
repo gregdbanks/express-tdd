@@ -89,5 +89,25 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("status", "closed");
             });
         });
+
+        describe("DELETE /api/missions/:missionId/incidents/:incidentId/reports/:reportId", () => {
+            it("should delete an existing report", async () => {
+                const response = await request(app).delete(
+                    `/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}`
+                );
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty(
+                    "message",
+                    "Report deleted successfully"
+                );
+            });
+
+            it("should return 404 for a deleted report", async () => {
+                const response = await request(app).get(
+                    `/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}`
+                );
+                expect(response.status).toBe(404);
+            });
+        });
     });
 };
