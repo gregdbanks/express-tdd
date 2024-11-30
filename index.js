@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 
 app.use("/api", require("./routes/missionRoutes"));
 app.use("/api", require("./routes/incidentRoutes"));
+app.use("/api", require("./routes/reportRoutes"));
 
 app.use((req, res, next) => {
     const error = new Error("Resource not found");
