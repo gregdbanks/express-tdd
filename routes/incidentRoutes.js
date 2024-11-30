@@ -10,6 +10,7 @@ router
 router
     .route("/incidents/:id")
     .get(incidentController.getIncident)
-    .put(incidentController.updateIncident);
+    .put(incidentController.updateIncident)
+    .delete(incidentController.deleteIncident);
 
 module.exports = router;

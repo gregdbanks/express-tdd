@@ -71,5 +71,24 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("status", "resolved");
             });
         });
+
+
+        describe("DELETE /api/incidents/:id", () => {
+            it("should delete an existing incident", async () => {
+                const response = await request(app).delete(
+                    `/api/incidents/${incidentId}`
+                );
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty(
+                    "message",
+                    "Incident deleted successfully"
+                );
+            });
+
+            it("should return 404 for a deleted incident", async () => {
+                const response = await request(app).get(`/api/incidents/${incidentId}`);
+                expect(response.status).toBe(404);
+            });
+        });
     });
 };

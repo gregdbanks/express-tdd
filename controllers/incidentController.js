@@ -36,9 +36,19 @@ const updateIncident = asyncHandler(async (req, res) => {
     res.status(200).json(incident);
 });
 
+const deleteIncident = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const incident = await Incident.findByIdAndDelete(id);
+    if (!incident) {
+        return res.status(404).json({ error: "Incident not found" });
+    }
+    res.status(200).json({ message: "Incident deleted successfully" });
+});
+
 module.exports = {
     createIncident,
     getIncidents,
     getIncident,
-    updateIncident
+    updateIncident,
+    deleteIncident
 };
