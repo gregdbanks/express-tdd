@@ -14,11 +14,12 @@ afterAll(async () => {
 
 describe("Missions API", () => {
     let id = new Date().getMilliseconds();
+    let missionId;
 
     describe("POST /api/missions", () => {
         it("should create a new mission", async () => {
             const mission = {
-                name: "Rescue Princess Leia",
+                name: "Rescue Princess Leia" + id,
                 description: "Rescue Princess Leia from the Death Star.",
                 status: "pending",
                 commander: "Luke Skywalker",
@@ -26,7 +27,8 @@ describe("Missions API", () => {
 
             const response = await request(app).post("/api/missions").send(mission);
             expect(response.status).toBe(201);
-            expect(response.body).toHaveProperty("name", "Rescue Princess Leia");
+            expect(response.body).toHaveProperty("name", "Rescue Princess Leia" + id);
+            missionId = response.body._id;
         });
     });
 
@@ -35,6 +37,18 @@ describe("Missions API", () => {
             const response = await request(app).get("/api/missions");
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body)).toBe(true);
+        });
+    });
+
+    describe("GET /api/missions/:id", () => {
+        it("should get a single mission by id", async () => {
+            const response = await request(app).get(`/api/missions/${missionId}`);
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty(
+                "name",
+                "Rescue Princess Leia" + id
+            );
+            expect(response.body).toHaveProperty("status", "pending");
         });
     });
 

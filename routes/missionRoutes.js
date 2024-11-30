@@ -7,4 +7,8 @@ router
     .post(missionController.createMission)
     .get(missionController.getMissions);
 
+router
+    .route("/missions/:id")
+    .get(missionController.getMission);
+
 module.exports = router;
