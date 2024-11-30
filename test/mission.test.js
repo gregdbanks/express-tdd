@@ -1,10 +1,13 @@
 const request = require("supertest");
 const app = require("../index");
 const mongoose = require("mongoose");
+
+const Mission = require("../models/Mission");
 const { connectDb, disconnectDb } = require("../config/db");
 
 beforeAll(async () => {
     await connectDb();
+    await Mission.deleteMany({});
 });
 
 afterAll(async () => {
@@ -52,58 +55,79 @@ describe("Missions API", () => {
         });
     });
 
-    describe('Async Error Handling Middleware', () => {
-        it('should catch errors and pass them to the error handler', async () => {
-            const response = await request(app).get('/api/missions/non-existent-route');
-            expect(response.status).toBe(404);
-            expect(response.body.error).toBe('Resource not found');
+    describe("PUT /api/missions/:id", () => {
+        it("should update an existing mission", async () => {
+            const updatedMission = {
+                name: "Destroy the Death Star",
+                description: "Destroy the Death Star using the Rebel fleet.",
+                status: "in progress",
+                commander: "Luke Skywalker",
+            };
+
+            const response = await request(app)
+                .put(`/api/missions/${missionId}`)
+                .send(updatedMission);
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty(
+                "name",
+                "Destroy the Death Star"
+            );
+            expect(response.body).toHaveProperty("status", "in progress");
         });
     });
+});
 
-    describe('Error Handling Middleware', () => {
-        it('should handle CastError', async () => {
-            const response = await request(app).get('/api/missions/invalid-id');
-            expect(response.status).toBe(404);
-            expect(response.body.error).toBe('Resource not found');
-        });
+describe('Async Error Handling Middleware', () => {
+    it('should catch errors and pass them to the error handler', async () => {
+        const response = await request(app).get('/api/missions/non-existent-route');
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Resource not found');
+    });
+});
 
-        it('should handle Duplicate Key Error', async () => {
-            const mission = {
-                name: 'Duplicate Mission',
-                description: 'A mission to test duplicate key error',
-                status: 'pending',
-                commander: 'Test Commander'
-            };
+describe('Error Handling Middleware', () => {
+    it('should handle CastError', async () => {
+        const response = await request(app).get('/api/missions/invalid-id');
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Resource not found');
+    });
 
-            // Create the first mission
-            await request(app)
-                .post('/api/missions')
-                .send(mission);
+    it('should handle Duplicate Key Error', async () => {
+        const mission = {
+            name: 'Duplicate Mission',
+            description: 'A mission to test duplicate key error',
+            status: 'pending',
+            commander: 'Test Commander'
+        };
 
-            // Attempt to create a duplicate mission
-            const response = await request(app)
-                .post('/api/missions')
-                .send(mission);
+        // Create the first mission
+        await request(app)
+            .post('/api/missions')
+            .send(mission);
 
-            expect(response.status).toBe(400);
-            expect(response.body.error).toBe('Duplicate field value entered');
-        });
+        // Attempt to create a duplicate mission
+        const response = await request(app)
+            .post('/api/missions')
+            .send(mission);
 
-        it('should handle ValidationError', async () => {
-            const partialMission = {
-                name: '',
-                description: 'A mission to test duplicate key error',
-                status: 'pending',
-                commander: 'Test Commander'
-            };
+        expect(response.status).toBe(400);
+        expect(response.body.error).toBe('Duplicate field value entered');
+    });
 
-            const response = await request(app)
-                .post('/api/missions')
-                .send(partialMission);
+    it('should handle ValidationError', async () => {
+        const partialMission = {
+            name: '',
+            description: 'A mission to test duplicate key error',
+            status: 'pending',
+            commander: 'Test Commander'
+        };
 
-            expect(response.status).toBe(400);
-            expect(response.body.error).toContain('Path `name` is required.');
-        });
+        const response = await request(app)
+            .post('/api/missions')
+            .send(partialMission);
+
+        expect(response.status).toBe(400);
+        expect(response.body.error).toContain('Path `name` is required.');
     });
 });
 
