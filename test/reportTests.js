@@ -72,5 +72,22 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("title", "Found Luke");
             });
         });
+
+        describe("PUT /api/missions/:missionId/incidents/:incidentId/reports/:reportId", () => {
+            it("should update an existing report", async () => {
+                const updatedReport = {
+                    title: "Rescued Luke",
+                    content: "Luke was rescued from the Sarlacc pit.",
+                    status: "closed",
+                };
+
+                const response = await request(app)
+                    .put(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}`)
+                    .send(updatedReport);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("title", "Rescued Luke");
+                expect(response.body).toHaveProperty("status", "closed");
+            });
+        });
     });
 };

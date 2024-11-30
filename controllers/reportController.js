@@ -21,8 +21,23 @@ const getReport = asyncHandler(async (req, res) => {
     res.status(200).json(report);
 });
 
+const updateReport = asyncHandler(async (req, res) => {
+    const { reportId } = req.params;
+    const { title, content, status } = req.body;
+    const report = await Report.findByIdAndUpdate(
+        reportId,
+        { title, content, status },
+        { new: true, runValidators: true }
+    );
+    if (!report) {
+        return res.status(404).json({ error: "Report not found" });
+    }
+    res.status(200).json(report);
+});
+
 module.exports = {
     createReport,
     getReports,
     getReport,
+    updateReport,
 };

@@ -9,6 +9,7 @@ router
 
 router
     .route("/missions/:missionId/incidents/:incidentId/reports/:reportId")
-    .get(reportController.getReport);
+    .get(reportController.getReport)
+    .put(reportController.updateReport);
 
 module.exports = router;
