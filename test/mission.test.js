@@ -37,6 +37,14 @@ describe("Missions API", () => {
             expect(Array.isArray(response.body)).toBe(true);
         });
     });
+
+    describe('Async Error Handling Middleware', () => {
+        it('should catch errors and pass them to the error handler', async () => {
+            const response = await request(app).get('/api/missions/non-existent-route');
+            expect(response.status).toBe(404);
+            expect(response.body.error).toBe('Resource not found');
+        });
+    });
 });
 
 
