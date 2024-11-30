@@ -1,24 +1,15 @@
 const request = require("supertest");
 const app = require("../index");
 const mongoose = require("mongoose");
+const { connectDb, disconnectDb } = require("../config/db");
 
 beforeAll(async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("MongoDB connected...");
-    } catch (err) {
-        console.error(err.message);
-        process.exit(1);
-    };
+    await connectDb();
 });
 
 afterAll(async () => {
-    try {
-        await mongoose.disconnect();
-        console.log("MongoDB disconnected...");
-    } catch (err) {
-        console.error(err.message);
-    }
+    await disconnectDb();
+    await mongoose.connection.close();
 });
 
 describe("Missions API", () => {
