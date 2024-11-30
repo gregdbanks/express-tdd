@@ -177,6 +177,16 @@ describe("Incidents", () => {
             incidentId = response.body._id;
         });
     });
+
+    describe("GET /api/missions/:missionId/incidents", () => {
+        it("should get all incidents for a mission", async () => {
+            const response = await request(app).get(
+                `/api/missions/${missionId}/incidents`
+            );
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
+        });
+    });
 });
 
 

@@ -4,6 +4,7 @@ const incidentController = require("../controllers/incidentController");
 
 router
     .route("/missions/:missionId/incidents")
-    .post(incidentController.createIncident);
+    .post(incidentController.createIncident)
+    .get(incidentController.getIncidents);
 
 module.exports = router;
