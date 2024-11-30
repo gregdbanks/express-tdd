@@ -29,4 +29,14 @@ describe("Missions API", () => {
             expect(response.body).toHaveProperty("name", "Rescue Princess Leia");
         });
     });
+
+    describe("GET /api/missions", () => {
+        it("should get all missions", async () => {
+            const response = await request(app).get("/api/missions");
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
+        });
+    });
 });
+
+

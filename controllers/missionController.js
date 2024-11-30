@@ -19,4 +19,19 @@ const createMission = async (req, res) => {
     }
 };
 
-module.exports = { createMission };
+const getMissions = async (req, res) => {
+    try {
+        const missions = await Mission.find();
+        res.status(200).json(missions);
+    } catch (err) {
+        if (err.code === 11000) {
+            res.status(400).json({ error: "Mission with this name already exists" });
+        } else if (err.kind === "ObjectId" && err.name === "CastError") {
+            res.status(404).json({ error: "Mission not found" });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+};
+
+module.exports = { createMission, getMissions };

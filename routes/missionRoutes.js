@@ -4,6 +4,7 @@ const missionController = require("../controllers/missionController");
 
 router
     .route("/missions")
-    .post(missionController.createMission);
+    .post(missionController.createMission)
+    .get(missionController.getMissions);
 
 module.exports = router;
