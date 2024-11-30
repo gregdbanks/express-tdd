@@ -46,5 +46,13 @@ module.exports = function () {
                 expect(Array.isArray(response.body)).toBe(true);
             });
         });
+
+        describe("GET /api/incidents/:id", () => {
+            it("should get a single incident by id", async () => {
+                const response = await request(app).get(`/api/incidents/${incidentId}`);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("title", "Locate Luke Skywalker");
+            });
+        });
     });
 };

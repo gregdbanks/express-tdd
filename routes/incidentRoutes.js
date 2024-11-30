@@ -7,4 +7,8 @@ router
     .post(incidentController.createIncident)
     .get(incidentController.getIncidents);
 
+router
+    .route("/incidents/:id")
+    .get(incidentController.getIncident);
+
 module.exports = router;

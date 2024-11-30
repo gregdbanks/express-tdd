@@ -13,7 +13,17 @@ const getIncidents = asyncHandler(async (req, res) => {
     res.status(200).json(incidents);
 });
 
+const getIncident = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const incident = await Incident.findById(id);
+    if (!incident) {
+        return res.status(404).json({ error: "Incident not found" });
+    }
+    res.status(200).json(incident);
+});
+
 module.exports = {
     createIncident,
-    getIncidents
+    getIncidents,
+    getIncident
 };
