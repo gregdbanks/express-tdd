@@ -179,5 +179,47 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("error", "File not found");
             });
         });
+
+        describe("DELETE /api/missions/:missionId/incidents/:incidentId/reports/:reportId/files/:fileId", () => {
+            const missionId = "6d713995b721c3bb38c1f5d0";
+            const incidentId = "6d713995b721c3bb38c1f5d1";
+            const reportId = "7d713995b721c3bb38c1f5d2";
+
+            it("should delete all files associated with a report", async () => {
+                // First, retrieve the list of files to get all file IDs
+                const listResponse = await request(app)
+                    .get(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files`);
+
+                expect(listResponse.status).toBe(200);
+                expect(listResponse.body).toHaveProperty("files");
+                const files = listResponse.body.files;
+                expect(Array.isArray(files)).toBe(true);
+                expect(files.length).toBeGreaterThan(0);
+
+                // Iterate over the files and delete each one
+                for (const file of files) {
+                    const deleteResponse = await request(app)
+                        .delete(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files/${file._id}`);
+
+                    expect(deleteResponse.status).toBe(200);
+                    expect(deleteResponse.body).toHaveProperty("message", "File deleted successfully");
+                }
+
+                // Verify that all files are deleted
+                const finalListResponse = await request(app)
+                    .get(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files`);
+
+                expect(finalListResponse.status).toBe(200);
+                expect(finalListResponse.body.files.length).toBe(0);
+            });
+
+            it("should return 404 if the file to be deleted is not found", async () => {
+                const response = await request(app)
+                    .delete(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files/invalidFileId`);
+
+                expect(response.status).toBe(404);
+                expect(response.body).toHaveProperty("error", "File not found");
+            });
+        });
     });
 };

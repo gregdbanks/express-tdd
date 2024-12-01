@@ -25,4 +25,8 @@ router
     .route("/missions/:missionId/incidents/:incidentId/reports/:reportId/files/:fileId")
     .get(reportController.getFileFromReport);
 
+router
+    .route("/missions/:missionId/incidents/:incidentId/reports/:reportId/files/:fileId")
+    .delete(reportController.deleteFileFromReport);
+
 module.exports = router;

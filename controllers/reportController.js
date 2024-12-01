@@ -152,6 +152,42 @@ const getFileFromReport = asyncHandler(async (req, res) => {
     });
 });
 
+const deleteFileFromReport = asyncHandler(async (req, res) => {
+    const { reportId, fileId } = req.params;
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+        return res.status(404).json({ error: 'Report not found' });
+    }
+
+    const file = report.files.id(fileId);
+
+    if (!file) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    const params = {
+        Bucket: 'missions-bucket', // Replace with your actual S3 bucket name
+        Key: path.basename(file.fileUrl),
+    };
+
+    // Delete the file from S3
+    s3.deleteObject(params, async (err, data) => {
+        if (err) {
+            console.error("S3 DeleteObject Error:", err);
+            return res.status(500).json({ error: 'Error deleting file from S3' });
+        }
+
+        // Remove the file from the report's files array
+        report.files.pull(fileId);
+        await report.save();
+
+        res.status(200).json({
+            message: 'File deleted successfully',
+        });
+    });
+});
+
 module.exports = {
     createReport,
     getReports,
@@ -160,5 +196,6 @@ module.exports = {
     deleteReport,
     uploadFile,
     getFilesFromReport,
-    getFileFromReport
+    getFileFromReport,
+    deleteFileFromReport
 };
