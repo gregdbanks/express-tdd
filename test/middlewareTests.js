@@ -171,6 +171,7 @@ module.exports = function () {
                     content: 'Testing cascade delete',
                     status: 'open',
                     incident: incidentId,
+                    user: "674760631d5aba7490e31ff2",
                     files: []
                 };
                 const report = await Report.create(reportData);

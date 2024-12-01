@@ -23,6 +23,11 @@ const ReportSchema = new mongoose.Schema({
         ref: "Incident",
         required: true,
     },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
     files: [
         {
             fileUrl: {

@@ -1,5 +1,7 @@
 const path = require("path");
 const { setupAuthenticatedUser } = require('./testUtil');
+const Mission = require('../models/Mission');
+const Incident = require('../models/Incident');
 
 module.exports = function () {
     let user, authReq;
@@ -15,6 +17,7 @@ module.exports = function () {
             description: "Rescue the Jedi from Jabba the Hutt.",
             status: "pending",
             commander: "Leia Organa",
+            user: user.id,
         };
 
         const missionResponse = await authReq
@@ -43,6 +46,7 @@ module.exports = function () {
                     content: "Luke was found near the Sarlacc pit.",
                     status: "open",
                     incident: incidentId,
+                    user: user.id,
                 };
 
                 const response = await authReq
@@ -51,6 +55,44 @@ module.exports = function () {
                 expect(response.status).toBe(201);
                 expect(response.body).toHaveProperty("title", "Found Luke");
                 reportId = response.body._id;
+            });
+
+            it("should return 403 if the user does not have permission to create a report", async () => {
+                const otherUserId = "1234567890abcdef12345678"; // A different user ID
+
+                // Create a mission directly in the database owned by another user
+                const mission = await Mission.create({
+                    name: "Infiltrate the Empire Again",
+                    description: "Gather intel from within the Empire.",
+                    status: "pending",
+                    commander: "Cassian Andor",
+                    user: otherUserId, // Mission owned by another user
+                });
+                const otherMissionId = mission._id;
+
+                // Create an incident directly in the database associated with the mission
+                const incident = await Incident.create({
+                    title: "Secure Entry Codes Again",
+                    description: "Obtain codes to access Imperial facilities.",
+                    status: "pending",
+                    mission: otherMissionId,
+                    user: otherUserId, // Incident owned by another user
+                });
+                const otherIncidentId = incident._id;
+
+                // Attempt to create a report on the incident as the authenticated user
+                const report = {
+                    title: "Unauthorized Report",
+                    content: "Attempting to create a report without permission.",
+                    status: "open",
+                };
+
+                const response = await authReq
+                    .post(`/api/missions/${otherMissionId}/incidents/${otherIncidentId}/reports`)
+                    .send(report);
+
+                expect(response.status).toBe(403);
+                expect(response.body).toHaveProperty("error");
             });
         });
 
@@ -122,8 +164,8 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("fileUrl");
             });
 
-            it.skip("should upload a video file to an existing report", async () => {
-                jest.setTimeout(30000);
+            it("should upload a video file to an existing report", async () => {
+                jest.setTimeout(8000);
                 const response = await authReq
                     .post(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/upload`)
                     .attach("file", path.resolve(__dirname, "../_data/files/reportVideo.mp4"));

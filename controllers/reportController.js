@@ -2,6 +2,7 @@ const aws = require('aws-sdk');
 const multer = require("multer");
 const path = require("path");
 const Report = require("../models/Report");
+const Mission = require("../models/Mission");
 const asyncHandler = require("../middleware/async");
 
 aws.config.update({
@@ -15,8 +16,19 @@ const s3 = new aws.S3();
 const upload = multer({ storage: multer.memoryStorage() }).single('file');
 
 const createReport = asyncHandler(async (req, res) => {
-    const { title, content, status, incident } = req.body;
-    let report = new Report({ title, content, status, incident });
+    req.body.user = req.user.id;
+    const mission = await Mission.findById(req.params.missionId);
+
+    if (!mission) {
+        return res.status(404).json({ error: "Mission not found" });
+    }
+
+    if (mission.user.toString() !== req.user.id && req.user.role !== 'commander') {
+        return res.status(403).json({ error: `User ${req.user.id} does not have permission to create an report for mission ${mission._id}.` });
+    }
+
+    req.body.mission = mission._id;
+    let report = new Report(req.body);
     await report.save();
     res.status(201).json(report);
 });
