@@ -9,6 +9,7 @@ dotenv.config({ path: "./config/config.env" });
 const Mission = require('./models/Mission');
 const Incident = require('./models/Incident');
 const Report = require('./models/Report');
+const User = require('./models/User');
 
 // Connect to DB
 mongoose.connect(process.env.MONGO_URI);
@@ -44,6 +45,7 @@ const deleteData = async () => {
         await Mission.deleteMany();
         await Incident.deleteMany();
         await Report.deleteMany();
+        await User.deleteMany();
         console.log('Data Destroyed...');
     } catch (err) {
         console.error(err);

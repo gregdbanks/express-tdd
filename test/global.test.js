@@ -18,10 +18,12 @@ const missionTests = require('./missionTests');
 const incidentTests = require('./incidentTests');
 const reportTests = require('./reportTests');
 const middlewareTests = require('./middlewareTests');
+const authTests = require('./authTests');
 
 describe("Missions API", () => {
     missionTests();
     incidentTests();
     reportTests();
     middlewareTests();
+    authTests();
 });
