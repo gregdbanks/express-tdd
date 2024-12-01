@@ -65,5 +65,42 @@ module.exports = function () {
                 expect(user.password).not.toBe("password123");
             });
         });
+
+        describe("POST /api/v1/auth/login", () => {
+            beforeAll(async () => {
+                await User.create({
+                    name: "John Doe",
+                    email: "john@example.com",
+                    password: "password123",
+                    role: "user"
+                });
+            });
+
+            it("should return a valid JWT token upon successful login", async () => {
+                const response = await request(app)
+                    .post("/api/v1/auth/login")
+                    .send({
+                        email: "john@example.com",
+                        password: "password123"
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body).toHaveProperty("token");
+            });
+
+            it("should return a 401 error for incorrect credentials", async () => {
+                const response = await request(app)
+                    .post("/api/v1/auth/login")
+                    .send({
+                        email: "john@example.com",
+                        password: "wrongpassword"
+                    });
+
+                expect(response.status).toBe(401);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body).toHaveProperty("message", "Invalid credentials");
+            });
+        });
     });
 };
