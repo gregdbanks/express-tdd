@@ -35,6 +35,17 @@ MissionSchema.pre("save", function (next) {
     next();
 });
 
+MissionSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+    const incidents = await this.model("Incident").find({ mission: this._id });
+
+    for (const incident of incidents) {
+        await incident.deleteOne();
+    }
+
+    next();
+});
+
+
 MissionSchema.virtual("incidents", {
     ref: "Incident",
     localField: "_id",

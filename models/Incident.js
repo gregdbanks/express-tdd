@@ -25,4 +25,12 @@ const IncidentSchema = new mongoose.Schema({
     },
 });
 
+IncidentSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+    const incidentId = this._id || this.getQuery()._id;
+
+    await this.model("Report").deleteMany({ incident: incidentId });
+
+    next();
+});
+
 module.exports = mongoose.model("Incident", IncidentSchema);

@@ -1,4 +1,7 @@
 const request = require('supertest');
+
+const Incident = require('../models/Incident');
+const Report = require('../models/Report');
 const app = require('../index');
 
 module.exports = function () {
@@ -128,6 +131,30 @@ module.exports = function () {
                 const response = await request(app).get('/api/missions?page=1&limit=2');
                 expect(response.status).toBe(200);
                 expect(response.body.pagination).toHaveProperty('next');
+            });
+        });
+
+        describe("Cascade delete", () => {
+            let seedMissionId = "5d713995b721c3bb38c1f5d0";
+            let seedIncidentId = "6d713995b721c3bb38c1f5d1";
+            let seedReportId = "7d713995b721c3bb38c1f5d2";
+
+            it("should delete a seeded mission and its associated incident and report", async () => {
+                const response = await request(app).delete(`/api/missions/${seedMissionId}`);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty(
+                    "message",
+                    "Mission deleted successfully"
+                );
+
+                const missionCheck = await request(app).get(`/api/missions/${seedMissionId}`);
+                expect(missionCheck.status).toBe(404);
+
+                const incidentCheck = await Incident.findById(seedIncidentId);
+                expect(incidentCheck).toBeNull();
+
+                const reportCheck = await Report.findById(seedReportId);
+                expect(reportCheck).toBeNull();
             });
         });
     });

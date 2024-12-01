@@ -38,10 +38,11 @@ const updateIncident = asyncHandler(async (req, res) => {
 
 const deleteIncident = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const incident = await Incident.findByIdAndDelete(id);
+    const incident = await Incident.findById(id);
     if (!incident) {
         return res.status(404).json({ error: "Incident not found" });
     }
+    await incident.deleteOne();
     res.status(200).json({ message: "Incident deleted successfully" });
 });
 
