@@ -123,6 +123,12 @@ module.exports = function () {
                     expect(prevDate <= currentDate).toBe(true);
                 }
             });
+
+            it('should paginate the results based on the provided page and limit', async () => {
+                const response = await request(app).get('/api/missions?page=1&limit=2');
+                expect(response.status).toBe(200);
+                expect(response.body.pagination).toHaveProperty('next');
+            });
         });
     });
 };
