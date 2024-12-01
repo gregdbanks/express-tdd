@@ -14,7 +14,7 @@ module.exports = function () {
                     name: "Rescue princess Leia",
                     description: "Rescue princess Leia from the Death Star.",
                     status: "pending",
-                    commander: "Luke Skywalker",
+                    commander: "Luke Skywalker"
                 };
 
                 const response = await authReq
@@ -93,10 +93,35 @@ module.exports = function () {
         });
 
         describe("DELETE /api/missions/:id", () => {
+            let anotherUser;
+
+            beforeAll(async () => {
+                anotherUser = await setupAuthenticatedUser({
+                    name: "anotherUser",
+                    email: "anotherUser@example.com",
+                    password: "password123",
+                    role: "pilot",
+                    user: "23423424"
+                });
+            });
+
+            it("should prevent a user from deleting a mission they do not own", async () => {
+                const response = await anotherUser.authReq.delete(`/api/missions/${missionId}`);
+                expect(response.status).toBe(403);
+                expect(response.body).toHaveProperty("error", "You do not have permission to delete this mission");
+            });
+
+            it("should prevent a user from updating a mission they do not own", async () => {
+                const response = await anotherUser.authReq.put(`/api/missions/${missionId}`).send({
+                    name: "Unauthorized Update"
+                });
+
+                expect(response.status).toBe(403);
+                expect(response.body).toHaveProperty("error", "You do not have permission to modify this mission");
+            });
+
             it("should delete an existing mission", async () => {
-                const response = await authReq.delete(
-                    `/api/missions/${missionId}`
-                );
+                const response = await authReq.delete(`/api/missions/${missionId}`);
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("message", "Mission deleted successfully");
             });
@@ -106,5 +131,6 @@ module.exports = function () {
                 expect(response.status).toBe(404);
             });
         });
+
     });
 };

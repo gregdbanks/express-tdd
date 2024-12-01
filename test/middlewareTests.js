@@ -138,22 +138,55 @@ module.exports = function () {
         });
 
         describe("Cascade delete", () => {
-            let seedMissionId = "5d713995b721c3bb38c1f5d0";
-            let seedIncidentId = "6d713995b721c3bb38c1f5d1";
-            let seedReportId = "7d713995b721c3bb38c1f5d2";
+            let missionId;
+            let incidentId;
+            let reportId;
 
-            it("should delete a seeded mission and its associated incident and report", async () => {
-                const response = await authReq.delete(`/api/missions/${seedMissionId}`);
+            beforeAll(async () => {
+                // Create a mission
+                const missionData = {
+                    name: 'Mission for Cascade Delete Test',
+                    description: 'Testing cascade delete',
+                    status: 'pending',
+                    commander: 'Commander Test'
+                };
+                const missionResponse = await authReq.post('/api/missions').send(missionData);
+                missionId = missionResponse.body._id;
+
+                // Create an incident associated with the mission
+                const incidentData = {
+                    title: 'Incident for Cascade Delete Test',
+                    description: 'Testing cascade delete',
+                    status: 'pending',
+                    mission: missionId
+                };
+                const incident = await Incident.create(incidentData);
+                incidentId = incident._id;
+
+                // Create a report associated with the incident
+                const reportData = {
+                    title: 'Report for Cascade Delete Test',
+                    content: 'Testing cascade delete',
+                    status: 'open',
+                    incident: incidentId,
+                    files: []
+                };
+                const report = await Report.create(reportData);
+                reportId = report._id;
+            });
+
+            it("should delete a mission and its associated incident and report", async () => {
+                const response = await authReq.delete(`/api/missions/${missionId}`);
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("message", "Mission deleted successfully");
 
-                const missionCheck = await authReq.get(`/api/missions/${seedMissionId}`);
+                const missionCheck = await authReq.get(`/api/missions/${missionId}`);
                 expect(missionCheck.status).toBe(404);
 
-                const incidentCheck = await Incident.findById(seedIncidentId);
+                const incidentCheck = await Incident.findById(incidentId);
                 expect(incidentCheck).toBeNull();
 
-                const reportCheck = await Report.findById(seedReportId);
+                const reportCheck = await Report.findById(reportId);
                 expect(reportCheck).toBeNull();
             });
         });
