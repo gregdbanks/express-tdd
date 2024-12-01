@@ -9,8 +9,7 @@ const createMission = asyncHandler(async (req, res) => {
 });
 
 const getMissions = asyncHandler(async (req, res) => {
-    const missions = await Mission.find();
-    res.status(200).json(missions);
+    res.status(200).json(res.modifiedResults);
 });
 
 const getMission = asyncHandler(async (req, res) => {
@@ -38,10 +37,11 @@ const updateMission = asyncHandler(async (req, res) => {
 
 const deleteMission = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const mission = await Mission.findByIdAndDelete(id);
+    const mission = await Mission.findById(id);
     if (!mission) {
         return res.status(404).json({ error: "Mission not found" });
     }
+    await mission.deleteOne();
     res.status(200).json({ message: "Mission deleted successfully" });
 });
 

@@ -1,0 +1,34 @@
+const modifiedResults = (model) => async (req, res, next) => {
+    let query;
+
+    // Copy req.query
+    const reqQuery = { ...req.query };
+
+    // Fields to exclude
+    const removeFields = ['select', 'sort', 'page', 'limit'];
+
+    // Loop over removeFields and delete them from reqQuery
+    removeFields.forEach(param => delete reqQuery[param]);
+
+    // Create query string
+    let queryStr = JSON.stringify(reqQuery);
+
+    // Create operators ($gt, $gte, etc)
+    queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
+
+    // Finding resource
+    query = model.find(JSON.parse(queryStr));
+
+    // Execute query
+    const results = await query;
+
+    res.modifiedResults = {
+        success: true,
+        count: results.length,
+        data: results
+    };
+
+    next();
+};
+
+module.exports = modifiedResults;

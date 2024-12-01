@@ -76,6 +76,30 @@ module.exports = function () {
                 expect(response.body).toHaveProperty('slug', 'test-slug-mission');
                 missionId = response.body._id;
             });
+
+            it('should filter results based on query parameters and not include results with other statuses', async () => {
+                const response = await request(app).get('/api/missions?status=pending');
+                expect(response.status).toBe(200);
+                expect(response.body.success).toBe(true);
+                expect(response.body.data).toEqual(expect.any(Array));
+                response.body.data.forEach(mission => {
+                    expect(mission.status).toBe('pending');
+                    expect(mission.status).not.toBe('completed');
+                    expect(mission.status).not.toBe('in-progress');
+                });
+            });
+
+            it('should filter results based on query operators', async () => {
+                const response = await request(app).get('/api/missions?status[in]=pending,completed&createdAt[gt]=2024-01-01');
+                expect(response.status).toBe(200);
+                expect(response.body.success).toBe(true);
+                expect(response.body.data).toEqual(expect.any(Array));
+                response.body.data.forEach(mission => {
+                    expect(['pending', 'completed']).toContain(mission.status);
+                    expect(['in progress']).toNotContain(mission.status);
+                    expect(new Date(mission.createdAt)).toBeGreaterThan(new Date('2024-01-01'));
+                });
+            });
         });
     });
 };

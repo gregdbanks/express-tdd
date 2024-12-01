@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const missionController = require("../controllers/missionController");
+const modifiedResults = require("../middleware/modifiedResults");
+const Mission = require("../models/Mission");
 
 router
     .route("/missions")
     .post(missionController.createMission)
-    .get(missionController.getMissions);
+    .get(modifiedResults(Mission), missionController.getMissions);
 
 router
     .route("/missions/:id")
