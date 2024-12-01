@@ -100,6 +100,14 @@ module.exports = function () {
                     expect(new Date(mission.createdAt)).toBeGreaterThan(new Date('2024-01-01'));
                 });
             });
+
+            it('should select specific fields in the response', async () => {
+                const response = await request(app).get('/api/missions?select=name,status');
+                expect(response.status).toBe(200);
+                expect(response.body.data[0]).toHaveProperty('name');
+                expect(response.body.data[0]).toHaveProperty('status');
+                expect(response.body.data[0]).not.toHaveProperty('description');
+            });
         });
     });
 };

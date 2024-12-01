@@ -19,6 +19,12 @@ const modifiedResults = (model) => async (req, res, next) => {
     // Finding resource
     query = model.find(JSON.parse(queryStr));
 
+
+    if (req.query.select) {
+        const fields = req.query.select.split(',').join(' ');
+        query = query.select(fields);
+    }
+
     // Execute query
     const results = await query;
 
