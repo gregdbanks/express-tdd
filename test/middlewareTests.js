@@ -108,6 +108,21 @@ module.exports = function () {
                 expect(response.body.data[0]).toHaveProperty('status');
                 expect(response.body.data[0]).not.toHaveProperty('description');
             });
+
+            it('should sort the results by the specified field', async () => {
+                const sortedResponse = await request(app).get('/api/missions?sort=createdAt');
+                expect(sortedResponse.status).toBe(200);
+                expect(sortedResponse.body.success).toBe(true);
+                expect(Array.isArray(sortedResponse.body.data)).toBe(true);
+
+                const missions = sortedResponse.body.data;
+
+                for (let i = 1; i < missions.length; i++) {
+                    const prevDate = new Date(missions[i - 1].createdAt);
+                    const currentDate = new Date(missions[i].createdAt);
+                    expect(prevDate <= currentDate).toBe(true);
+                }
+            });
         });
     });
 };
