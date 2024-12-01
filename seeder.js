@@ -1,5 +1,4 @@
 const fs = require('fs');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 // Load env vars
@@ -10,11 +9,9 @@ const Mission = require('./models/Mission');
 const Incident = require('./models/Incident');
 const Report = require('./models/Report');
 const User = require('./models/User');
+const { connectDb } = require('./config/db');
 
-// Connect to DB
-mongoose.connect(process.env.MONGO_URI);
-
-// Read JSON files
+connectDb();
 const missions = JSON.parse(
     fs.readFileSync(`${__dirname}/_data/missions.json`, 'utf-8')
 );

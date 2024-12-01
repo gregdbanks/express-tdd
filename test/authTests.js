@@ -1,9 +1,10 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const app = require('../index');
 const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const { setupAuthenticatedUser, authRequest } = require('./testUtil');
 
 module.exports = function () {
     describe("Authentication", () => {
@@ -72,20 +73,11 @@ module.exports = function () {
         });
 
         describe("POST /api/v1/auth/login", () => {
-            beforeAll(async () => {
-                await User.create({
-                    name: "John Doe",
-                    email: "john@example.com",
-                    password: "password123",
-                    role: "user"
-                });
-            });
-
             it("should return a valid JWT token upon successful login", async () => {
                 const response = await request(app)
                     .post("/api/v1/auth/login")
                     .send({
-                        email: "john@example.com",
+                        email: "test@example.com",
                         password: "password123"
                     });
 
@@ -98,13 +90,67 @@ module.exports = function () {
                 const response = await request(app)
                     .post("/api/v1/auth/login")
                     .send({
-                        email: "john@example.com",
+                        email: "test@example.com",
                         password: "wrongpassword"
                     });
 
                 expect(response.status).toBe(401);
                 expect(response.body).toHaveProperty("success", false);
                 expect(response.body).toHaveProperty("message", "Invalid credentials");
+            });
+        });
+    });
+
+    describe("Role-Based Access Control", () => {
+        let authReqPilot, authReqUser;
+
+        beforeAll(async () => {
+            ({ authReq: authReqPilot } = await setupAuthenticatedUser({
+                name: "Pilot User",
+                email: "pilot@example.com",
+                password: "password123",
+                role: "pilot"
+            }));
+
+            ({ authReq: authReqUser } = await setupAuthenticatedUser({
+                name: "Regular User",
+                email: "user@example.com",
+                password: "password123",
+                role: "user"
+            }));
+        });
+
+        describe("POST /api/missions", () => {
+            it("should allow access for a pilot", async () => {
+                const response = await authReqPilot
+                    .post("/api/missions")
+                    .send({
+                        name: "Recon Mission",
+                        description: "A recon mission to survey the area.",
+                        status: "pending",
+                        commander: "patton"
+                    });
+
+                expect(response.status).toBe(201);
+                expect(response.body).toHaveProperty("name", "Recon Mission");
+            });
+
+            it("should deny access for a regular user", async () => {
+                const response = await authReqUser
+                    .post("/api/missions")
+                    .send({
+                        name: "Stealth Mission",
+                        description: "A stealth mission for infiltration.",
+                        status: "pending",
+                        commander: "sheeny mullet"
+                    });
+
+                expect(response.status).toBe(403);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body).toHaveProperty(
+                    "message",
+                    "User role user is not authorized to access this route"
+                );
             });
         });
     });

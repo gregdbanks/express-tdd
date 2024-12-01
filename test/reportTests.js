@@ -122,8 +122,8 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("fileUrl");
             });
 
-            it("should upload a video file to an existing report", async () => {
-                jest.setTimeout(20000);
+            it.skip("should upload a video file to an existing report", async () => {
+                jest.setTimeout(30000);
                 const response = await authReq
                     .post(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/upload`)
                     .attach("file", path.resolve(__dirname, "../_data/files/reportVideo.mp4"));

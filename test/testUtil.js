@@ -20,11 +20,16 @@ function authRequest(userPayload = {}) {
     return authReq;
 }
 
-async function setupAuthenticatedUser(userOptions = { email: 'test@example.com' }) {
-    let user = await User.findOne(userOptions);
+async function setupAuthenticatedUser(userOptions = { name: 'Test User', email: 'test@example.com', password: 'password123', role: 'user' }) {
+    let user = await User.findOne({ email: userOptions.email });
 
     if (!user) {
-        throw new Error(`Test user not found with options: ${JSON.stringify(userOptions)}. Please ensure the test user is created.`);
+        user = await User.create({
+            name: userOptions.name,
+            email: userOptions.email,
+            password: userOptions.password,
+            role: userOptions.role
+        });
     }
 
     const authReq = authRequest({ id: user._id });
