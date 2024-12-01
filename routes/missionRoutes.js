@@ -7,7 +7,7 @@ const Mission = require("../models/Mission");
 router
     .route("/missions")
     .post(missionController.createMission)
-    .get(modifiedResults(Mission), missionController.getMissions);
+    .get(modifiedResults(Mission, 'incidents'), missionController.getMissions);
 
 router
     .route("/missions/:id")

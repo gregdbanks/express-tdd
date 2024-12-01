@@ -14,7 +14,7 @@ const getMissions = asyncHandler(async (req, res) => {
 
 const getMission = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const mission = await Mission.findById(id);
+    const mission = await Mission.findById(id).populate('incidents');
     if (!mission) {
         return res.status(404).json({ error: "Mission not found" });
     }

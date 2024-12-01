@@ -28,6 +28,16 @@ module.exports = function () {
                 expect(response.status).toBe(200);
                 expect(Array.isArray(response.body.data)).toBe(true);
             });
+
+            it("should get all missions and populate incidents", async () => {
+                const response = await request(app).get("/api/missions");
+                expect(response.status).toBe(200);
+                expect(Array.isArray(response.body.data)).toBe(true);
+                response.body.data.forEach(mission => {
+                    expect(mission).toHaveProperty("incidents");
+                    expect(Array.isArray(mission.incidents)).toBe(true);
+                });
+            });
         });
 
         describe("GET /api/missions/:id", () => {
@@ -39,6 +49,15 @@ module.exports = function () {
                     "Rescue princess Leia"
                 );
                 expect(response.body).toHaveProperty("status", "pending");
+            });
+
+            it("should get a single mission by id and populate incidents", async () => {
+                const response = await request(app).get(`/api/missions/${missionId}`);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("name", "Rescue princess Leia");
+                expect(response.body).toHaveProperty("status", "pending");
+                expect(response.body).toHaveProperty("incidents");
+                expect(Array.isArray(response.body.incidents)).toBe(true);
             });
         });
 

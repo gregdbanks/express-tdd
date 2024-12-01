@@ -24,12 +24,22 @@ const MissionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    slug: String
+    slug: String,
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 MissionSchema.pre("save", function (next) {
     this.slug = slugify(this.name, { lower: true });
     next();
+});
+
+MissionSchema.virtual("incidents", {
+    ref: "Incident",
+    localField: "_id",
+    foreignField: "mission",
+    justOne: false,
 });
 
 module.exports = mongoose.model("Mission", MissionSchema);

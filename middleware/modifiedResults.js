@@ -1,4 +1,4 @@
-const modifiedResults = (model) => async (req, res, next) => {
+const modifiedResults = (model, populate) => async (req, res, next) => {
     let query;
 
     // Copy req.query
@@ -39,7 +39,10 @@ const modifiedResults = (model) => async (req, res, next) => {
 
     query = query.skip(startIndex).limit(limit);
 
-    // Execute query
+    if (populate) {
+        query = query.populate(populate);
+    }
+
     const results = await query;
 
     const pagination = {};
