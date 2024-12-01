@@ -56,5 +56,26 @@ module.exports = function () {
                 expect(response.body.error).toContain('Path `name` is required.');
             });
         });
+
+        describe('Modify Results Middleware', () => {
+            let missionId;
+
+            it('should generate a slug for the mission', async () => {
+                const mission = {
+                    name: 'Test Slug Mission',
+                    description: 'A mission to test slug generation',
+                    status: 'pending',
+                    commander: 'Test Commander'
+                };
+
+                const response = await request(app)
+                    .post('/api/missions')
+                    .send(mission);
+
+                expect(response.status).toBe(201);
+                expect(response.body).toHaveProperty('slug', 'test-slug-mission');
+                missionId = response.body._id;
+            });
+        });
     });
 };

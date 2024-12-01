@@ -19,7 +19,6 @@ module.exports = function () {
                 .post("/api/missions")
                 .send(mission);
             missionId = missionResponse.body._id;
-            console.log('missionResponse', missionResponse.body);
 
             const incident = {
                 title: "Locate Luke Skywalker",
@@ -32,7 +31,6 @@ module.exports = function () {
                 .post(`/api/missions/${missionId}/incidents`)
                 .send(incident);
             incidentId = incidentResponse.body._id;
-            console.log('incidentId', incidentId);
         });
 
         describe("POST /api/missions/:missionId/incidents/:incidentId/reports", () => {
