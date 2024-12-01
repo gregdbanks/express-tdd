@@ -1,42 +1,64 @@
-const bcrypt = require('bcryptjs');
-const User = require('../models/User');
-const asyncHandler = require('../middleware/async');
+const bcrypt = require("bcryptjs");
+const User = require("../models/User");
+const asyncHandler = require("../middleware/async");
+
+const sendTokenResponse = (
+    user,
+    statusCode,
+    res,
+    message = "Authentication successful"
+) => {
+    const token = user.getSignedJwtToken();
+
+    const options = {
+        expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+        ),
+        httpOnly: true,
+    };
+
+    if (process.env.NODE_ENV === "production") {
+        options.secure = true;
+    }
+
+    res
+        .status(statusCode)
+        .cookie("token", token, options)
+        .json({
+            success: true,
+            token,
+            message,
+        });
+};
 
 exports.register = asyncHandler(async (req, res, next) => {
     const { name, email, password, role } = req.body;
 
-    // Create user
     const user = await User.create({
         name,
         email,
         password,
-        role
+        role,
     });
 
-    const token = user.getSignedJwtToken();
-
-    res.status(200).json({
-        success: true,
-        message: 'Register route',
-        token
-    });
+    sendTokenResponse(user, 200, res, "Register route");
 });
 
-exports.login = async (req, res, next) => {
+exports.login = asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({
             success: false,
-            message: 'Please provide an email and password'
+            message: "Please provide an email and password",
         });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
         return res.status(401).json({
             success: false,
-            message: 'Invalid credentials'
+            message: "Invalid credentials",
         });
     }
 
@@ -44,14 +66,9 @@ exports.login = async (req, res, next) => {
     if (!isMatch) {
         return res.status(401).json({
             success: false,
-            message: 'Invalid credentials'
+            message: "Invalid credentials",
         });
     }
 
-    const token = user.getSignedJwtToken();
-
-    res.status(200).json({
-        success: true,
-        token
-    });
-};
+    sendTokenResponse(user, 200, res);
+});

@@ -27,9 +27,14 @@ const reports = JSON.parse(
     fs.readFileSync(`${__dirname}/_data/reports.json`, 'utf-8')
 );
 
+const users = JSON.parse(
+    fs.readFileSync(`${__dirname}/_data/user.json`, 'utf-8')
+);
+
 // Import into DB
 const importData = async () => {
     try {
+        await User.create(users);
         await Mission.create(missions);
         await Incident.create(incidents);
         await Report.create(reports);

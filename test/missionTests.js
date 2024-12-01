@@ -1,11 +1,13 @@
-const request = require('supertest');
-const app = require('../index');
+const { setupAuthenticatedUser } = require('./testUtil');
+
+let missionId, authReq;
 
 module.exports = function () {
-    describe("Missions", () => {
-        let id = new Date().getMilliseconds();
-        let missionId;
+    beforeAll(async () => {
+        ({ user, authReq } = await setupAuthenticatedUser());
+    });
 
+    describe("Missions", () => {
         describe("POST /api/missions", () => {
             it("should create a new mission", async () => {
                 const mission = {
@@ -15,22 +17,27 @@ module.exports = function () {
                     commander: "Luke Skywalker",
                 };
 
-                const response = await request(app).post("/api/missions").send(mission);
+                const response = await authReq
+                    .post("/api/missions")
+                    .send(mission);
                 expect(response.status).toBe(201);
-                expect(response.body).toHaveProperty("name", "Rescue princess Leia");
+                expect(response.body).toHaveProperty(
+                    "name",
+                    "Rescue princess Leia"
+                );
                 missionId = response.body._id;
             });
         });
 
         describe("GET /api/missions", () => {
             it("should get all missions", async () => {
-                const response = await request(app).get("/api/missions");
+                const response = await authReq.get("/api/missions");
                 expect(response.status).toBe(200);
                 expect(Array.isArray(response.body.data)).toBe(true);
             });
 
             it("should get all missions and populate incidents", async () => {
-                const response = await request(app).get("/api/missions");
+                const response = await authReq.get("/api/missions");
                 expect(response.status).toBe(200);
                 expect(Array.isArray(response.body.data)).toBe(true);
                 response.body.data.forEach(mission => {
@@ -42,7 +49,7 @@ module.exports = function () {
 
         describe("GET /api/missions/:id", () => {
             it("should get a single mission by id", async () => {
-                const response = await request(app).get(`/api/missions/${missionId}`);
+                const response = await authReq.get(`/api/missions/${missionId}`);
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty(
                     "name",
@@ -52,9 +59,12 @@ module.exports = function () {
             });
 
             it("should get a single mission by id and populate incidents", async () => {
-                const response = await request(app).get(`/api/missions/${missionId}`);
+                const response = await authReq.get(`/api/missions/${missionId}`);
                 expect(response.status).toBe(200);
-                expect(response.body).toHaveProperty("name", "Rescue princess Leia");
+                expect(response.body).toHaveProperty(
+                    "name",
+                    "Rescue princess Leia"
+                );
                 expect(response.body).toHaveProperty("status", "pending");
                 expect(response.body).toHaveProperty("incidents");
                 expect(Array.isArray(response.body.incidents)).toBe(true);
@@ -70,7 +80,7 @@ module.exports = function () {
                     commander: "Luke Skywalker",
                 };
 
-                const response = await request(app)
+                const response = await authReq
                     .put(`/api/missions/${missionId}`)
                     .send(updatedMission);
                 expect(response.status).toBe(200);
@@ -84,18 +94,15 @@ module.exports = function () {
 
         describe("DELETE /api/missions/:id", () => {
             it("should delete an existing mission", async () => {
-                const response = await request(app).delete(
+                const response = await authReq.delete(
                     `/api/missions/${missionId}`
                 );
                 expect(response.status).toBe(200);
-                expect(response.body).toHaveProperty(
-                    "message",
-                    "Mission deleted successfully"
-                );
+                expect(response.body).toHaveProperty("message", "Mission deleted successfully");
             });
 
             it("should return 404 for a deleted mission", async () => {
-                const response = await request(app).get(`/api/missions/${missionId}`);
+                const response = await authReq.get(`/api/missions/${missionId}`);
                 expect(response.status).toBe(404);
             });
         });

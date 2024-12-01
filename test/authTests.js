@@ -21,6 +21,11 @@ module.exports = function () {
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("success", true);
                 expect(response.body).toHaveProperty("message", "Register route");
+
+
+                const cookies = response.headers["set-cookie"];
+                expect(cookies).toBeDefined();
+                expect(cookies.some(cookie => cookie.startsWith("token="))).toBe(true);
             });
 
             it("should return a valid JWT token upon registration", async () => {

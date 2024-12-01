@@ -1,7 +1,12 @@
-const request = require('supertest');
-const app = require('../index');
+const { setupAuthenticatedUser } = require('./testUtil');
 
 module.exports = function () {
+    let user, authReq;
+
+    beforeAll(async () => {
+        ({ user, authReq } = await setupAuthenticatedUser());
+    });
+
     describe("Incidents", () => {
         let missionId;
         let incidentId;
@@ -15,8 +20,7 @@ module.exports = function () {
                     commander: "Leia Organa",
                 };
 
-                const missionResponse = await request(app)
-                    .post("/api/missions")
+                const missionResponse = await authReq.post("/api/missions")
                     .send(mission);
                 missionId = missionResponse.body._id;
 
@@ -27,21 +31,18 @@ module.exports = function () {
                     mission: missionId,
                 };
 
-                const response = await request(app)
+                const response = await authReq
                     .post(`/api/missions/${missionId}/incidents`)
                     .send(incident);
                 incidentId = response.body._id;
                 expect(response.status).toBe(201);
                 expect(response.body).toHaveProperty("title", "Locate Luke Skywalker");
-                incidentId = response.body._id;
             });
         });
 
         describe("GET /api/missions/:missionId/incidents", () => {
             it("should get all incidents for a mission", async () => {
-                const response = await request(app).get(
-                    `/api/missions/${missionId}/incidents`
-                );
+                const response = await authReq.get(`/api/missions/${missionId}/incidents`);
                 expect(response.status).toBe(200);
                 expect(Array.isArray(response.body)).toBe(true);
             });
@@ -49,7 +50,7 @@ module.exports = function () {
 
         describe("GET /api/incidents/:id", () => {
             it("should get a single incident by id", async () => {
-                const response = await request(app).get(`/api/incidents/${incidentId}`);
+                const response = await authReq.get(`/api/incidents/${incidentId}`);
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("title", "Locate Luke Skywalker");
             });
@@ -63,7 +64,7 @@ module.exports = function () {
                     status: "resolved",
                 };
 
-                const response = await request(app)
+                const response = await authReq
                     .put(`/api/incidents/${incidentId}`)
                     .send(updatedIncident);
                 expect(response.status).toBe(200);
@@ -72,10 +73,9 @@ module.exports = function () {
             });
         });
 
-
         describe("DELETE /api/incidents/:id", () => {
             it("should delete an existing incident", async () => {
-                const response = await request(app).delete(
+                const response = await authReq.delete(
                     `/api/incidents/${incidentId}`
                 );
                 expect(response.status).toBe(200);
@@ -86,7 +86,7 @@ module.exports = function () {
             });
 
             it("should return 404 for a deleted incident", async () => {
-                const response = await request(app).get(`/api/incidents/${incidentId}`);
+                const response = await authReq.get(`/api/incidents/${incidentId}`);
                 expect(response.status).toBe(404);
             });
         });

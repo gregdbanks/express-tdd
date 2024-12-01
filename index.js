@@ -1,11 +1,13 @@
 const express = require("express");
-const dotenv = require("dotenv");
+const dotenv = require("dotenv")
 const bodyParser = require("body-parser");
-
+const cookieParser = require("cookie-parser");
 const { connectDb } = require("./config/db");
+const errorHandler = require("./middleware/error");
+require('dotenv').config();
 
 dotenv.config({ path: "./config/config.env" });
-const errorHandler = require("./middleware/error");
+
 connectDb();
 
 const app = express();
@@ -18,12 +20,14 @@ app.use("/api", require("./routes/reportRoutes"));
 app.use("/api", require("./routes/authRoutes"));
 
 app.use((req, res, next) => {
-    const error = new Error("Resource not found");
+    const error = new Error('Resource not found');
     error.statusCode = 404;
     next(error);
 });
 
 app.use(errorHandler);
+
+app.use(cookieParser());
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`Server running on PORT: ${port}`));
