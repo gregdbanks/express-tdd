@@ -17,4 +17,12 @@ router
     .route("/missions/:missionId/incidents/:incidentId/reports/:reportId/upload")
     .post(reportController.uploadFile);
 
+router
+    .route("/missions/:missionId/incidents/:incidentId/reports/:reportId/files")
+    .get(reportController.getFilesFromReport);
+
+router
+    .route("/missions/:missionId/incidents/:incidentId/reports/:reportId/files/:fileId")
+    .get(reportController.getFileFromReport);
+
 module.exports = router;

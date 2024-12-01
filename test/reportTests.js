@@ -116,7 +116,6 @@ module.exports = function () {
             const reportId = "7d713995b721c3bb38c1f5d2";
 
             it("should upload an image file to an existing report", async () => {
-                jest.setTimeout(10000);
                 const response = await request(app)
                     .post(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/upload`)
                     .attach("file", path.resolve(__dirname, "../_data/files/reportImage.jpg"));
@@ -135,6 +134,49 @@ module.exports = function () {
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("message", "File uploaded and added to report successfully");
                 expect(response.body).toHaveProperty("fileUrl");
+            });
+        });
+
+        describe("GET /api/missions/:missionId/incidents/:incidentId/reports/:reportId/files", () => {
+            const missionId = "6d713995b721c3bb38c1f5d0";
+            const incidentId = "6d713995b721c3bb38c1f5d1";
+            const reportId = "7d713995b721c3bb38c1f5d2";
+
+            it("should retrieve a list of files associated with a report", async () => {
+                const response = await request(app)
+                    .get(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files`);
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("files");
+                expect(Array.isArray(response.body.files)).toBe(true);
+                expect(response.body.files.length).toBeGreaterThan(0);
+            });
+
+            it("should retrieve a specific file associated with a report", async () => {
+                const listResponse = await request(app)
+                    .get(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files`);
+
+                expect(listResponse.status).toBe(200);
+                expect(listResponse.body).toHaveProperty("files");
+                const files = listResponse.body.files;
+                expect(Array.isArray(files)).toBe(true);
+                expect(files.length).toBeGreaterThan(0);
+
+                const fileId = files[0]._id;
+                const response = await request(app)
+                    .get(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files/${fileId}`);
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("fileUrl");
+                expect(response.body).toHaveProperty("fileType");
+            });
+
+            it("should return 404 if a report or file is not found", async () => {
+                const response = await request(app)
+                    .get(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/files/invalidFileId`);
+
+                expect(response.status).toBe(404);
+                expect(response.body).toHaveProperty("error", "File not found");
             });
         });
     });

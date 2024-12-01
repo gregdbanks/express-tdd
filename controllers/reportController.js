@@ -108,6 +108,50 @@ const uploadFile = asyncHandler(async (req, res) => {
     });
 });
 
+const getFilesFromReport = asyncHandler(async (req, res) => {
+    const { reportId } = req.params;
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+        return res.status(404).json({ error: 'Report not found' });
+    }
+
+    res.status(200).json({ files: report.files });
+});
+
+const getFileFromReport = asyncHandler(async (req, res) => {
+    const { reportId, fileId } = req.params;
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+        return res.status(404).json({ error: 'Report not found' });
+    }
+
+    const file = report.files.id(fileId);
+
+    if (!file) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    const params = {
+        Bucket: 'missions-bucket',
+        Key: path.basename(file.fileUrl),
+    };
+
+    s3.getObject(params, (err, data) => {
+        if (err) {
+            console.error("S3 GetObject Error:", err);
+            return res.status(500).json({ error: 'Error retrieving file' });
+        }
+
+        res.status(200).json({
+            fileUrl: file.fileUrl,
+            fileType: file.fileType,
+            fileContent: data.Body.toString('base64'),
+        });
+    });
+});
+
 module.exports = {
     createReport,
     getReports,
@@ -115,4 +159,6 @@ module.exports = {
     updateReport,
     deleteReport,
     uploadFile,
+    getFilesFromReport,
+    getFileFromReport
 };
