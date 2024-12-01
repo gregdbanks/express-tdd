@@ -1,4 +1,5 @@
 const { setupAuthenticatedUser } = require('./testUtil');
+const Mission = require('../models/Mission');
 
 module.exports = function () {
     let user, authReq;
@@ -10,7 +11,6 @@ module.exports = function () {
     describe("Incidents", () => {
         let missionId;
         let incidentId;
-
         describe("POST /api/missions/:missionId/incidents", () => {
             it("should create a new incident for a mission", async () => {
                 const mission = {
@@ -18,6 +18,7 @@ module.exports = function () {
                     description: "Rescue the Jedi from Jabba the Hutt.",
                     status: "pending",
                     commander: "Leia Organa",
+                    user: user.id,
                 };
 
                 const missionResponse = await authReq.post("/api/missions")
@@ -28,7 +29,6 @@ module.exports = function () {
                     title: "Locate Luke Skywalker",
                     description: "Find out where Han Solo is being held.",
                     status: "pending",
-                    mission: missionId,
                 };
 
                 const response = await authReq
@@ -37,6 +37,33 @@ module.exports = function () {
                 incidentId = response.body._id;
                 expect(response.status).toBe(201);
                 expect(response.body).toHaveProperty("title", "Locate Luke Skywalker");
+            });
+
+            it("should return 403 if the user does not have permission", async () => {
+                const otherUserId = "1234567890abcdef12345678"; // A different user ID
+
+                // Create a mission directly in the database
+                const mission = await Mission.create({
+                    name: "Infiltrate the Empire",
+                    description: "Gather intel from within the Empire.",
+                    status: "pending",
+                    commander: "Cassian Andor",
+                    user: otherUserId, // Mission owned by another user
+                });
+                const otherMissionId = mission._id;
+
+                const incident = {
+                    title: "Secure Entry Codes",
+                    description: "Obtain codes to access Imperial facilities.",
+                    status: "pending",
+                };
+
+                const response = await authReq
+                    .post(`/api/missions/${otherMissionId}/incidents`)
+                    .send(incident);
+
+                expect(response.status).toBe(403);
+                expect(response.body).toHaveProperty("error");
             });
         });
 

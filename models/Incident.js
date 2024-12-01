@@ -23,6 +23,11 @@ const IncidentSchema = new mongoose.Schema({
         ref: "Mission",
         required: true,
     },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
 });
 
 IncidentSchema.pre("deleteOne", { document: true, query: false }, async function (next) {

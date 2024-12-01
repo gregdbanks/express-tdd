@@ -148,7 +148,8 @@ module.exports = function () {
                     name: 'Mission for Cascade Delete Test',
                     description: 'Testing cascade delete',
                     status: 'pending',
-                    commander: 'Commander Test'
+                    commander: 'Commander Test',
+                    user: "674760631d5aba7490e31ff2"
                 };
                 const missionResponse = await authReq.post('/api/missions').send(missionData);
                 missionId = missionResponse.body._id;
@@ -158,7 +159,8 @@ module.exports = function () {
                     title: 'Incident for Cascade Delete Test',
                     description: 'Testing cascade delete',
                     status: 'pending',
-                    mission: missionId
+                    mission: missionId,
+                    user: "674760631d5aba7490e31ff2"
                 };
                 const incident = await Incident.create(incidentData);
                 incidentId = incident._id;
