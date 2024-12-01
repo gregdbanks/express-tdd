@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const app = require('../index');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 module.exports = function () {
     describe("Authentication", () => {
@@ -20,6 +21,28 @@ module.exports = function () {
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("success", true);
                 expect(response.body).toHaveProperty("message", "Register route");
+            });
+
+            it("should return a valid JWT token upon registration", async () => {
+                const response = await request(app)
+                    .post("/api/v1/auth/register")
+                    .send({
+                        name: "Token User",
+                        email: "tokenuser@example.com",
+                        password: "password123",
+                        role: "user"
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body).toHaveProperty("token");
+
+                const decoded = jwt.verify(response.body.token, process.env.JWT_SECRET);
+                expect(decoded).toHaveProperty("id");
+                expect(decoded.id).toBeDefined();
+
+                const user = await User.findOne({ email: "tokenuser@example.com" });
+                expect(user).not.toBeNull();
             });
 
             it("should hash the password before saving to the database", async () => {
