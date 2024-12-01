@@ -1,5 +1,18 @@
+const aws = require('aws-sdk');
+const multer = require("multer");
+const path = require("path");
 const Report = require("../models/Report");
 const asyncHandler = require("../middleware/async");
+
+aws.config.update({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+});
+
+const s3 = new aws.S3();
+
+const upload = multer({ storage: multer.memoryStorage() }).single('file');
 
 const createReport = asyncHandler(async (req, res) => {
     const { title, content, status, incident } = req.body;
@@ -44,10 +57,62 @@ const deleteReport = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Report deleted successfully" });
 });
 
+const uploadFile = asyncHandler(async (req, res) => {
+    upload(req, res, async function (err) {
+        if (err) {
+            console.error("Multer Error:", err.message);
+            return res.status(400).json({ error: err.message });
+        }
+
+        if (!req.file) {
+            console.error("No File Uploaded");
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const { reportId } = req.params;
+        const report = await Report.findById(reportId);
+
+        if (!report) {
+            console.error("Report Not Found");
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        const params = {
+            Bucket: 'missions-bucket',
+            Key: `${Date.now().toString()}-${path.basename(req.file.originalname)}`,
+            Body: req.file.buffer,
+            ACL: 'private',
+            ContentType: req.file.mimetype,
+        };
+
+        s3.upload(params, async (err, data) => {
+            if (err) {
+                console.error("S3 Upload Error:", err);
+                return res.status(500).json({ error: 'Error uploading file' });
+            }
+
+            const newFile = {
+                fileUrl: data.Location,
+                fileType: req.file.mimetype,
+                uploadedAt: new Date(),
+            };
+
+            report.files.push(newFile);
+            await report.save();
+
+            res.status(200).json({
+                message: 'File uploaded and added to report successfully',
+                fileUrl: newFile.fileUrl,
+            });
+        });
+    });
+});
+
 module.exports = {
     createReport,
     getReports,
     getReport,
     updateReport,
     deleteReport,
+    uploadFile,
 };

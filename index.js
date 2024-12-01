@@ -2,8 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 
+const { connectDb } = require("./config/db");
+
 dotenv.config({ path: "./config/config.env" });
 const errorHandler = require("./middleware/error");
+connectDb();
 
 const app = express();
 

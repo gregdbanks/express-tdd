@@ -1,4 +1,6 @@
 const request = require('supertest');
+const path = require("path");
+
 const app = require('../index');
 
 module.exports = function () {
@@ -105,6 +107,34 @@ module.exports = function () {
                     `/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}`
                 );
                 expect(response.status).toBe(404);
+            });
+        });
+
+        describe("POST /api/missions/:missionId/incidents/:incidentId/reports/:reportId/upload", () => {
+            const missionId = "6d713995b721c3bb38c1f5d0";
+            const incidentId = "6d713995b721c3bb38c1f5d1";
+            const reportId = "7d713995b721c3bb38c1f5d2";
+
+            it("should upload an image file to an existing report", async () => {
+                jest.setTimeout(10000);
+                const response = await request(app)
+                    .post(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/upload`)
+                    .attach("file", path.resolve(__dirname, "../_data/files/reportImage.jpg"));
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("message", "File uploaded and added to report successfully");
+                expect(response.body).toHaveProperty("fileUrl");
+            });
+
+            it("should upload a video file to an existing report", async () => {
+                jest.setTimeout(10000); // video uploads can timeout so adjust according to your needs
+                const response = await request(app)
+                    .post(`/api/missions/${missionId}/incidents/${incidentId}/reports/${reportId}/upload`)
+                    .attach("file", path.resolve(__dirname, "../_data/files/reportVideo.mp4"));
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("message", "File uploaded and added to report successfully");
+                expect(response.body).toHaveProperty("fileUrl");
             });
         });
     });

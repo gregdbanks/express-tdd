@@ -4,8 +4,8 @@ const { importData, deleteData } = require('../seeder');
 
 beforeAll(async () => {
     await connectDb();
-    await deleteData();
-    await importData();
+    await deleteData(); // Clear any existing data
+    await importData(); // Import the test data
 });
 
 afterAll(async () => {
@@ -16,12 +16,12 @@ afterAll(async () => {
 
 const missionTests = require('./missionTests');
 const incidentTests = require('./incidentTests');
-const middlewareTests = require('./middlewareTests');
 const reportTests = require('./reportTests');
+const middlewareTests = require('./middlewareTests');
 
 describe("Missions API", () => {
     missionTests();
     incidentTests();
-    middlewareTests();
     reportTests();
+    middlewareTests();
 });

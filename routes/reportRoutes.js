@@ -13,4 +13,8 @@ router
     .put(reportController.updateReport)
     .delete(reportController.deleteReport);
 
+router
+    .route("/missions/:missionId/incidents/:incidentId/reports/:reportId/upload")
+    .post(reportController.uploadFile);
+
 module.exports = router;

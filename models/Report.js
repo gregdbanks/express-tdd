@@ -23,6 +23,22 @@ const ReportSchema = new mongoose.Schema({
         ref: "Incident",
         required: true,
     },
+    files: [
+        {
+            fileUrl: {
+                type: String,
+                required: true,
+            },
+            fileType: {
+                type: String,
+                required: true,
+            },
+            uploadedAt: {
+                type: Date,
+                default: Date.now,
+            },
+        },
+    ],
 });
 
 module.exports = mongoose.model("Report", ReportSchema);
