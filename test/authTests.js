@@ -154,4 +154,47 @@ module.exports = function () {
             });
         });
     });
+
+    describe("Password Reset", () => {
+        let userEmail = "resetuser@example.com";
+
+        // Create a user that we can test the password reset on
+        beforeAll(async () => {
+            await User.create({
+                name: "Reset User",
+                email: userEmail,
+                password: "password123",
+                role: "user",
+            });
+        });
+
+        describe("POST /api/v1/auth/forgotpassword", () => {
+            it("should send a reset email if the user exists", async () => {
+                const response = await request(app)
+                    .post("/api/v1/auth/forgotpassword")
+                    .send({ email: userEmail });
+
+                // You may want to mock sendEmail in a real test scenario to not actually send emails
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body).toHaveProperty("data", "Email sent");
+
+                // Optionally, you could retrieve the user and check if resetPasswordToken and resetPasswordExpire are set.
+                const user = await User.findOne({ email: userEmail });
+                expect(user.resetPasswordToken).toBeDefined();
+                expect(user.resetPasswordExpire).toBeDefined();
+            });
+
+            it("should return 404 if the user does not exist", async () => {
+                const response = await request(app)
+                    .post("/api/v1/auth/forgotpassword")
+                    .send({ email: "doesnotexist@example.com" });
+
+                expect(response.status).toBe(404);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body).toHaveProperty("message", "User not found");
+            });
+        });
+    });
+
 };

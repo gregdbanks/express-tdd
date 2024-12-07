@@ -45,3 +45,5 @@ describe("Missions API", () => {
     middlewareTests();
 });
 ```
+
+- ! never added a logout or getMe to auth controller, dont i need those?
