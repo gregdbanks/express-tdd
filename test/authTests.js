@@ -195,6 +195,67 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("message", "User not found");
             });
         });
-    });
 
+        describe("PUT /api/v1/auth/resetpassword/:resettoken", () => {
+            let resetToken;
+            const userEmail = "resetuser@example.com";
+
+            beforeAll(async () => {
+                // Ensure the test environment is clean
+                await User.deleteMany({});
+
+                // Create a test user
+                const user = await User.create({
+                    name: "Reset User",
+                    email: userEmail,
+                    password: "password123",
+                    role: "user",
+                });
+
+                // Generate a reset token
+                resetToken = user.getResetPasswordToken();
+                await user.save({ validateBeforeSave: false });
+            });
+
+            it("should reset the password with a valid token", async () => {
+                const response = await request(app)
+                    .put(`/api/v1/auth/resetpassword/${resetToken}`)
+                    .send({ password: "newpassword123" });
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+
+                // Verify that the password was updated
+                const user = await User.findOne({ email: userEmail }).select("+password");
+                const isPasswordMatch = await bcrypt.compare("newpassword123", user.password);
+                expect(isPasswordMatch).toBe(true);
+
+                // Ensure the reset token and expiry are cleared
+                expect(user.resetPasswordToken).toBeUndefined();
+                expect(user.resetPasswordExpire).toBeUndefined();
+            });
+
+            it("should return 400 for invalid token", async () => {
+                const response = await request(app)
+                    .put("/api/v1/auth/resetpassword/invalidtoken")
+                    .send({ password: "newpassword123" });
+
+                expect(response.status).toBe(400);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body).toHaveProperty("message", "Invalid token");
+            });
+
+            it("should return 400 if no password is provided", async () => {
+                // const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+                const response = await request(app)
+                    .put(`/api/v1/auth/resetpassword/${resetToken}`)
+                    .send({});
+
+                expect(response.status).toBe(400);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body.message).toContain("Password is required");
+            });
+        });
+    });
 };

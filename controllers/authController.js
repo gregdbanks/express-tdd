@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const asyncHandler = require("../middleware/async");
 const sendEmail = require("../utils/sendEmail");
+const crypto = require("crypto");
 
 const sendTokenResponse = (
     user,
@@ -98,7 +99,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
             message,
         });
 
-        res.status(200).json({ success: true, data: "Email sent" });
+        return res.status(200).json({ success: true, data: "Email sent" }); // Response sent here
     } catch (error) {
         console.error(error);
         user.resetPasswordToken = undefined;
@@ -108,6 +109,32 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
         return res.status(500).json({ success: false, message: "Email could not be sent" });
     }
-
-    res.status(200).json({ success: true, data: user });
 });
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+    if (!req.body.password) {
+        return res.status(400).json({ success: false, message: "Password is required" });
+    }
+
+    const resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(req.params.resettoken)
+        .digest("hex");
+
+    const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+        return res.status(400).json({ success: false, message: "Invalid token" });
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+
+    res.status(200).json({ success: true });
+});
+
