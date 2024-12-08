@@ -23,7 +23,6 @@ module.exports = function () {
                 expect(response.body).toHaveProperty("success", true);
                 expect(response.body).toHaveProperty("message", "Register route");
 
-
                 const cookies = response.headers["set-cookie"];
                 expect(cookies).toBeDefined();
                 expect(cookies.some(cookie => cookie.startsWith("token="))).toBe(true);
@@ -249,6 +248,7 @@ module.exports = function () {
                 expect(response.body.message).toContain("Password is required");
             });
         });
+
         describe("GET /api/v1/auth/me", () => {
             let authReq, user;
 
@@ -386,6 +386,180 @@ module.exports = function () {
                 expect(response.status).toBe(400);
                 expect(response.body).toHaveProperty("success", false);
                 expect(response.body.message).toContain("New password is required");
+            });
+        });
+    });
+
+    describe("User Management (Commander)", () => {
+        let authReqCommander, authReqPilot, authReqUser, createdUserId;
+
+        const expectForbidden = (response) => {
+            expect(response.status).toBe(403);
+            expect(response.body).toHaveProperty("success", false);
+        };
+
+        const expectUnauthorized = (response) => {
+            expect(response.status).toBe(401);
+            expect(response.body).toHaveProperty("success", false);
+        };
+
+        const expectNotFound = (response) => {
+            expect(response.status).toBe(404);
+            expect(response.body).toHaveProperty("success", false);
+        };
+
+        beforeAll(async () => {
+            ({ authReq: authReqCommander } = await setupAuthenticatedUser({
+                name: "Commander User",
+                email: "commander@example.com",
+                password: "password123",
+                role: "commander"
+            }));
+
+            ({ authReq: authReqPilot } = await setupAuthenticatedUser({
+                name: "Pilot User",
+                email: "pilot2@example.com",
+                password: "password123",
+                role: "pilot"
+            }));
+
+            ({ authReq: authReqUser } = await setupAuthenticatedUser({
+                name: "Regular User",
+                email: "user2@example.com",
+                password: "password123",
+                role: "user"
+            }));
+        });
+
+        describe("GET /api", () => {
+            it("commander can get all users", async () => {
+                const response = await authReqCommander.get("/api");
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                console.log(response.body.data);
+                expect(Array.isArray(response.body.data)).toBe(true);
+            });
+
+            it("pilot cannot get all users", async () => {
+                const response = await authReqPilot.get("/api");
+                expectForbidden(response);
+            });
+
+            it("user cannot get all users", async () => {
+                const response = await authReqUser.get("/api");
+                expectForbidden(response);
+            });
+
+            it("unauthenticated request is unauthorized", async () => {
+                const response = await request(app).get("/api");
+                expectUnauthorized(response);
+            });
+        });
+
+        describe("POST /api", () => {
+            it("commander can create a user", async () => {
+                const response = await authReqCommander.post("/api").send({
+                    name: "New User",
+                    email: "newuser@example.com",
+                    password: "password123",
+                    role: "user"
+                });
+
+                expect(response.status).toBe(201);
+                expect(response.body).toHaveProperty("success", true);
+                createdUserId = response.body.data._id;
+            });
+
+            it("commander gets validation error for invalid data", async () => {
+                const response = await authReqCommander.post("/api").send({
+                    name: "",
+                    email: "notanemail",
+                    password: "pw",
+                    role: "notarole"
+                });
+
+                expect(response.status).toBe(400);
+                expect(response.body).toHaveProperty("success", false);
+            });
+
+            it("non-commander is forbidden", async () => {
+                for (const req of [authReqPilot, authReqUser]) {
+                    const response = await req.post("/api").send({
+                        name: "Should Fail",
+                        email: "failuser@example.com",
+                        password: "password123",
+                        role: "user"
+                    });
+                    expectForbidden(response);
+                }
+            });
+        });
+
+        describe("GET /api/:id", () => {
+            it("commander can get a user by ID", async () => {
+                const response = await authReqCommander.get(`/api/${createdUserId}`);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+            });
+
+            it("returns 404 if user not found", async () => {
+                const nonExistentId = new mongoose.Types.ObjectId();
+                const response = await authReqCommander.get(`/api/${nonExistentId}`);
+                expectNotFound(response);
+            });
+
+            it("non-commander is forbidden", async () => {
+                const response = await authReqUser.get(`/api/${createdUserId}`);
+                expectForbidden(response);
+            });
+        });
+
+        describe("PUT /api/:id", () => {
+            it("commander can update a user", async () => {
+                const response = await authReqCommander.put(`/api/${createdUserId}`).send({ name: "Updated Name" });
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body.data.name).toBe("Updated Name");
+            });
+
+            it("returns 404 if user to update not found", async () => {
+                const nonExistentId = new mongoose.Types.ObjectId();
+                const response = await authReqCommander.put(`/api/${nonExistentId}`).send({ name: "Nope" });
+                expectNotFound(response);
+            });
+
+            it("non-commander is forbidden", async () => {
+                const response = await authReqUser.put(`/api/${createdUserId}`).send({ name: "Fail" });
+                expectForbidden(response);
+            });
+        });
+
+        describe("DELETE /api/:id", () => {
+            it("commander can delete a user", async () => {
+                const response = await authReqCommander.delete(`/api/${createdUserId}`);
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+
+                const user = await User.findById(createdUserId);
+                expect(user).toBeNull();
+            });
+
+            it("returns 404 if user to delete not found", async () => {
+                const nonExistentId = new mongoose.Types.ObjectId();
+                const response = await authReqCommander.delete(`/api/${nonExistentId}`);
+                expectNotFound(response);
+            });
+
+            it("non-commander is forbidden", async () => {
+                const newUser = await User.create({
+                    name: "User to Fail Delete",
+                    email: "faildelete@example.com",
+                    password: "password123",
+                    role: "user"
+                });
+
+                const response = await authReqUser.delete(`/api/${newUser._id}`);
+                expectForbidden(response);
             });
         });
     });
