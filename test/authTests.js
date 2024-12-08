@@ -155,7 +155,7 @@ module.exports = function () {
         });
     });
 
-    describe("Password Reset", () => {
+    describe("User Management", () => {
         let userEmail = "resetuser@example.com";
 
         // Create a user that we can test the password reset on
@@ -174,12 +174,10 @@ module.exports = function () {
                     .post("/api/v1/auth/forgotpassword")
                     .send({ email: userEmail });
 
-                // You may want to mock sendEmail in a real test scenario to not actually send emails
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("success", true);
                 expect(response.body).toHaveProperty("data", "Email sent");
 
-                // Optionally, you could retrieve the user and check if resetPasswordToken and resetPasswordExpire are set.
                 const user = await User.findOne({ email: userEmail });
                 expect(user.resetPasswordToken).toBeDefined();
                 expect(user.resetPasswordExpire).toBeDefined();
@@ -201,10 +199,8 @@ module.exports = function () {
             const userEmail = "resetuser@example.com";
 
             beforeAll(async () => {
-                // Ensure the test environment is clean
                 await User.deleteMany({});
 
-                // Create a test user
                 const user = await User.create({
                     name: "Reset User",
                     email: userEmail,
@@ -225,12 +221,10 @@ module.exports = function () {
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("success", true);
 
-                // Verify that the password was updated
                 const user = await User.findOne({ email: userEmail }).select("+password");
                 const isPasswordMatch = await bcrypt.compare("newpassword123", user.password);
                 expect(isPasswordMatch).toBe(true);
 
-                // Ensure the reset token and expiry are cleared
                 expect(user.resetPasswordToken).toBeUndefined();
                 expect(user.resetPasswordExpire).toBeUndefined();
             });
@@ -246,8 +240,6 @@ module.exports = function () {
             });
 
             it("should return 400 if no password is provided", async () => {
-                // const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-
                 const response = await request(app)
                     .put(`/api/v1/auth/resetpassword/${resetToken}`)
                     .send({});
@@ -255,6 +247,145 @@ module.exports = function () {
                 expect(response.status).toBe(400);
                 expect(response.body).toHaveProperty("success", false);
                 expect(response.body.message).toContain("Password is required");
+            });
+        });
+        describe("GET /api/v1/auth/me", () => {
+            let authReq, user;
+
+            beforeAll(async () => {
+                ({ authReq, user } = await setupAuthenticatedUser({
+                    name: "Current User",
+                    email: "currentuser@example.com",
+                    password: "password123",
+                    role: "user"
+                }));
+            });
+
+            it("should return the current user's details", async () => {
+                const response = await authReq.get("/api/v1/auth/me");
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body.data).toHaveProperty("_id", user._id.toString());
+                expect(response.body.data).toHaveProperty("email", "currentuser@example.com");
+            });
+
+            it("should return 401 if not authenticated", async () => {
+                const response = await request(app).get("/api/v1/auth/me");
+                expect(response.status).toBe(401);
+                expect(response.body).toHaveProperty("success", false);
+            });
+        });
+
+        describe("PUT /api/v1/auth/updatedetails", () => {
+            let authReq, user;
+
+            beforeAll(async () => {
+                ({ authReq, user } = await setupAuthenticatedUser({
+                    name: "Updatable User",
+                    email: "updateuser@example.com",
+                    password: "password123",
+                    role: "user"
+                }));
+            });
+
+            it("should update the user's details", async () => {
+                const response = await authReq
+                    .put("/api/v1/auth/updatedetails")
+                    .send({ name: "Updated User", email: "updated@example.com" });
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body.data.name).toBe("Updated User");
+                expect(response.body.data.email).toBe("updated@example.com");
+            });
+
+            it("should return 401 if not authenticated", async () => {
+                const response = await request(app)
+                    .put("/api/v1/auth/updatedetails")
+                    .send({ name: "No Auth", email: "noauth@example.com" });
+
+                expect(response.status).toBe(401);
+                expect(response.body).toHaveProperty("success", false);
+            });
+
+            it("should return validation errors if data is invalid", async () => {
+                const response = await authReq
+                    .put("/api/v1/auth/updatedetails")
+                    .send({ email: "notanemail" });
+
+                expect(response.status).toBe(400);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body.error).toContain("Please add a valid email");
+            });
+        });
+
+        describe("PUT /api/v1/auth/updatepassword", () => {
+            let authReq, user;
+
+            beforeAll(async () => {
+                ({ authReq, user } = await setupAuthenticatedUser({
+                    name: "Password Update User",
+                    email: "pwupdate@example.com",
+                    password: "oldpassword123",
+                    role: "user"
+                }));
+            });
+
+            it("should update the password if currentPassword is correct", async () => {
+                const response = await authReq
+                    .put("/api/v1/auth/updatepassword")
+                    .send({
+                        currentPassword: "oldpassword123",
+                        newPassword: "newpassword456"
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("success", true);
+                expect(response.body.message).toBe("Password updated");
+
+                // Verify that the password was actually updated
+                const updatedUser = await User.findById(user._id).select("+password");
+                const isPasswordMatch = await bcrypt.compare("newpassword456", updatedUser.password);
+                expect(isPasswordMatch).toBe(true);
+            });
+
+            it("should return 401 if current password is incorrect", async () => {
+                const response = await authReq
+                    .put("/api/v1/auth/updatepassword")
+                    .send({
+                        currentPassword: "wrongpassword",
+                        newPassword: "anothernewpassword"
+                    });
+
+                expect(response.status).toBe(401);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body).toHaveProperty("message", "Password is incorrect");
+            });
+
+            it("should return 401 if not authenticated", async () => {
+                const response = await request(app)
+                    .put("/api/v1/auth/updatepassword")
+                    .send({
+                        currentPassword: "oldpassword123",
+                        newPassword: "newpassword456"
+                    });
+
+                expect(response.status).toBe(401);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body.message).toBe("Not authorized to access this route");
+            });
+
+            it("should return validation error if newPassword is not provided", async () => {
+                const response = await authReq
+                    .put("/api/v1/auth/updatepassword")
+                    .send({
+                        currentPassword: "oldpassword123"
+                    });
+
+                expect(response.status).toBe(400);
+                expect(response.body).toHaveProperty("success", false);
+                expect(response.body.message).toContain("New password is required");
             });
         });
     });

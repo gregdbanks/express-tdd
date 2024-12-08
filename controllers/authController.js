@@ -138,3 +138,39 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
     res.status(200).json({ success: true });
 });
 
+exports.getMe = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    res.status(200).json({ success: true, data: user });
+});
+
+exports.updateDetails = asyncHandler(async (req, res, next) => {
+    const fieldsToUpdate = {
+        name: req.body.name,
+        email: req.body.email,
+    };
+
+    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({ success: true, data: user });
+});
+
+exports.updatePassword = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id).select('+password');
+
+    if (!req.body.newPassword) {
+        return res.status(400).json({ success: false, message: "New password is required" });
+    }
+
+    if (!(await bcrypt.compare(req.body.currentPassword, user.password))) {
+        return res.status(401).json({ success: false, message: "Password is incorrect" });
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+
+    sendTokenResponse(user, 200, res, "Password updated");
+});
+
