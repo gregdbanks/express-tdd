@@ -272,6 +272,7 @@ module.exports = function () {
 
             it("should return 401 if not authenticated", async () => {
                 const response = await request(app).get("/api/v1/auth/me");
+                console.log(response.body);
                 expect(response.status).toBe(401);
                 expect(response.body).toHaveProperty("success", false);
             });
@@ -390,6 +391,36 @@ module.exports = function () {
         });
     });
 
+    describe("POST /api/v1/auth/logout", () => {
+        it("should clear the cookie token and restrict access to protected routes after logout", async () => {
+            const { authReq } = await setupAuthenticatedUser({
+                name: "Logout Restriction User",
+                email: "logoutaccess@example.com",
+                password: "password123",
+                role: "user",
+            });
+
+            // Perform logout
+            const logoutResponse = await authReq.post("/api/v1/auth/logout");
+
+            // Check if the cookie is cleared
+            const cookies = logoutResponse.headers["set-cookie"];
+            expect(cookies).toBeDefined();
+            expect(cookies.some(cookie => cookie.includes("token=none"))).toBe(true);
+            expect(cookies.some(cookie => cookie.includes("Expires="))).toBe(true);
+
+            // Attempt to access a protected route
+            const protectedRouteResponse = await request(app).get("/api/v1/auth/me");
+            console.log(protectedRouteResponse.body);
+
+            // Verify that access is restricted
+            expect(protectedRouteResponse.status).toBe(401);
+            expect(protectedRouteResponse.body).toHaveProperty("success", false);
+            expect(protectedRouteResponse.body.message).toBe("Not authorized to access this route");
+        });
+    });
+
+
     describe("User Management (Commander)", () => {
         let authReqCommander, authReqPilot, authReqUser, createdUserId;
 
@@ -436,7 +467,6 @@ module.exports = function () {
                 const response = await authReqCommander.get("/api");
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("success", true);
-                console.log(response.body.data);
                 expect(Array.isArray(response.body.data)).toBe(true);
             });
 
