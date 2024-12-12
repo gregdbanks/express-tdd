@@ -272,7 +272,6 @@ module.exports = function () {
 
             it("should return 401 if not authenticated", async () => {
                 const response = await request(app).get("/api/v1/auth/me");
-                console.log(response.body);
                 expect(response.status).toBe(401);
                 expect(response.body).toHaveProperty("success", false);
             });
@@ -411,7 +410,6 @@ module.exports = function () {
 
             // Attempt to access a protected route
             const protectedRouteResponse = await request(app).get("/api/v1/auth/me");
-            console.log(protectedRouteResponse.body);
 
             // Verify that access is restricted
             expect(protectedRouteResponse.status).toBe(401);

@@ -4,6 +4,13 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { connectDb } = require("./config/db");
 const errorHandler = require("./middleware/error");
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+const xss = require('xss-clean');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const cors = require('cors');
+
 require('dotenv').config();
 
 dotenv.config({ path: "./config/config.env" });
@@ -13,6 +20,29 @@ connectDb();
 const app = express();
 
 app.use(bodyParser.json());
+
+// Sanitize data
+app.use(mongoSanitize());
+
+// Set security headers
+app.use(helmet());
+
+// Prevent XSS attacks
+app.use(xss());
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 mins
+    max: 100
+});
+
+app.use(limiter);
+
+// Prevent http param pollution
+app.use(hpp());
+
+// Enable CORS
+app.use(cors());
 
 app.use("/api", require("./routes/missionRoutes"));
 app.use("/api", require("./routes/incidentRoutes"));

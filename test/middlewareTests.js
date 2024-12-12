@@ -1,5 +1,7 @@
 const Incident = require('../models/Incident');
 const Report = require('../models/Report');
+const request = require('supertest');
+const app = require('../index');
 const { setupAuthenticatedUser } = require('./testUtil');
 
 module.exports = function () {
@@ -7,6 +9,58 @@ module.exports = function () {
 
     beforeAll(async () => {
         ({ user, authReq } = await setupAuthenticatedUser());
+    });
+
+    describe('Sanitization and Security Middleware', () => {
+        it('should sanitize data to prevent NoSQL injection', async () => {
+            const maliciousPayload = { name: { $gt: '' } };
+            const response = await authReq.post('/api/missions').send(maliciousPayload);
+            expect(response.status).toBe(400);
+            expect(response.body.error).toContain('Cast to string failed for value');
+        });
+
+        it('should set security headers using Helmet', async () => {
+            const response = await authReq.get('/api/missions');
+            expect(response.headers).toHaveProperty('x-dns-prefetch-control', 'off');
+            expect(response.headers).toHaveProperty('x-frame-options', 'SAMEORIGIN');
+        });
+
+        it('should sanitize XSS attacks in user input', async () => {
+            const maliciousPayload = {
+                name: '<script>alert("XSS")</script>',
+                commander: 'Test Commander',
+                description: 'A mission to test XSS prevention',
+            };
+            const response = await authReq.post('/api/missions').send(maliciousPayload);
+
+            // Check the status code
+            expect(response.status).toBe(201); // Resource created
+
+            // Validate that the name field is sanitized (HTML-encoded)
+            expect(response.body).toHaveProperty('name');
+            expect(response.body.name).not.toContain('<script>');
+            expect(response.body.name).toBe('&lt;script>alert("XSS")&lt;/script>'); // Encoded value
+
+            // Verify other properties in the response
+            expect(response.body).toHaveProperty('commander', 'Test Commander');
+            expect(response.body).toHaveProperty('description', 'A mission to test XSS prevention');
+        });
+
+        it('should prevent HTTP parameter pollution', async () => {
+            const response = await authReq.get('/api/missions?name=test&name=another');
+            expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            // Check if only the last parameter value is retained
+            expect(response.body.data.every(entry => entry.name === 'another')).toBe(true);
+        });
+
+        it('should enable CORS for cross-origin requests', async () => {
+            const response = await request(app)
+                .options('/api/missions')
+                .set('Origin', 'http://example.com');
+
+            expect(response.headers).toHaveProperty('access-control-allow-origin', '*');
+        });
     });
 
     describe('Middleware Tests', () => {
